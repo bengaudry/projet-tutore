@@ -88,7 +88,7 @@ const chartHeight = computed(() => window.innerHeight / 1.5)
     <p>Détails de la compatibilité de la musique {{ musicTitle }} avec vos goûts musicaux</p>
 
     <div>
-      <div v-if="musicCompatibility">
+      <div v-if="musicCompatibility" class="apexcharts-theme-dark">
         <p>{{ musicCompatibility.compatibilityPercentage }}% compatible</p>
         <apexchart type="radar" :height="chartHeight" :options="chartOptions" :series="series" />
       </div>
