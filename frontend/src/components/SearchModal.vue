@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { RouterLink } from "vue-router"
+import { DialogClose, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
@@ -59,7 +60,11 @@ function searchMusic() {
     <!-- Affichage des résultats -->
     <ul v-if="results && results.length > 0">
       <li v-for="(result, index) in results" :key="index">
-        {{ result }}
+        <DialogClose>
+          <RouterLink :to="`/music-compatibility/${result}`">
+            {{ result }}
+          </RouterLink>
+        </DialogClose>
         <Separator v-if="index !== results.length - 1" class="my-4" />
       </li>
     </ul>

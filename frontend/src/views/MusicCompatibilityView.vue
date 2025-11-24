@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import { BackendApi, type MusicCompatibility } from "@/functions/api/backend"
 import { SpotifyApi } from "@/functions/api/spotify"
 import { computed, ref, watch } from "vue"
@@ -83,31 +84,40 @@ const chartHeight = computed(() => window.innerHeight / 1.5)
 </script>
 
 <template>
-  <div v-if="musicTitle">
-    <h1>Compatibilité avec {{ musicTitle }}</h1>
-    <p>Détails de la compatibilité de la musique {{ musicTitle }} avec vos goûts musicaux</p>
+  <main class="p-6">
+    <div v-if="musicTitle">
+      <h1>Compatibilité avec {{ musicTitle }}</h1>
+      
+      
+      <div>
+        <div v-if="musicCompatibility" class="apexcharts-theme-dark mt-6">
+          <Card class="border-border">
+            <CardHeader>
+              <CardTitle>
+                {{ musicCompatibility.compatibilityPercentage }}% compatible
+              </CardTitle>
+            </CardHeader>
+          </Card>
 
-    <div>
-      <div v-if="musicCompatibility" class="apexcharts-theme-dark">
-        <p>{{ musicCompatibility.compatibilityPercentage }}% compatible</p>
-        <apexchart type="radar" :height="chartHeight" :options="chartOptions" :series="series" />
-      </div>
+          <apexchart type="radar" :height="chartHeight" :options="chartOptions" :series="series" />
+        </div>
 
-      <div v-else-if="musicCompatibility === null">
-        <p>Erreur : impossible de calculer la compatibilité</p>
-      </div>
+        <div v-else-if="musicCompatibility === null">
+          <p>Erreur : impossible de calculer la compatibilité</p>
+        </div>
 
-      <div v-else>
-        <p>Calcul de la compatibilité...</p>
+        <div v-else>
+          <p>Calcul de la compatibilité...</p>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div v-else-if="musicTitle === null">
-    <p>Erreur : cette musique n'existe pas</p>
-  </div>
+    <div v-else-if="musicTitle === null">
+      <p>Erreur : cette musique n'existe pas</p>
+    </div>
 
-  <div v-else>
-    <p>Chargement...</p>
-  </div>
+    <div v-else>
+      <p>Chargement...</p>
+    </div>
+  </main>
 </template>
