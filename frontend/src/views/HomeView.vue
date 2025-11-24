@@ -17,7 +17,7 @@ const signIn = async () => {
 
 <template>
   <main>
-    <Button size="lg" v-bind:disabled="isLoading" v-on:click="signIn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">
+    <Button size="lg" v-bind:disabled="isLoading" v-on:click="signIn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium">
       <Spinner class="size-6" v-if="isLoading" />
       <img v-if="!isLoading" src="/spotify-icon.png" width="24" class="size-6 invert" />
       Se connecter avec Spotify
