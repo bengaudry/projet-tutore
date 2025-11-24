@@ -1,6 +1,6 @@
 import "./assets/main.css"
 import "./assets/typography.css"
-import "@flaticon/flaticon-uicons/css/regular/rounded.css";
+import "@flaticon/flaticon-uicons/css/regular/rounded.css"
 
 import { createApp } from "vue"
 import App from "./App.vue"
