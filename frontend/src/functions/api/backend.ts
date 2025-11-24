@@ -48,4 +48,13 @@ export class BackendApi {
       return null
     }
   }
+
+  public static async searchMusic(query: string): Promise<string[] | null> {
+    try {
+      await wait(1000) // simule le temps de réponse de l'api
+      return ["Musique 1", "Musique 2", "Musique 3"]
+    } catch (error) {
+      return null
+    }
+  }
 }
