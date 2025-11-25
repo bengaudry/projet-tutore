@@ -60,8 +60,22 @@ def profile():
 
     response = requests.get("https://api.spotify.com/v1/me", headers=headers)
     data = response.json()
-
+    
     return f"Bonjour {data['display_name']} !"
+### suggerer les recommandations de musique basées sur les préférences de l'utilisateur###
+@app.route("/recoSpotify")
+def recommendations(limit,country,music_type,track_list):
+    token = session.get("token")
+    headers = {"Authorization": f"Bearer {token}"}
+    params = {
+        "limit": limit,
+        "market": country,
+        "seed_genres": music_type,
+        "seed_tracks": track_list
+        }
+    response = requests.get("https://api.spotify.com/v1/recommendations", headers=headers, params=params)
+    reco= response.json()
+    return reco
 
 
 if __name__ == "__main__":

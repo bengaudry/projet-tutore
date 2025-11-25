@@ -1,69 +1,81 @@
-from flask import Flask
-from markupsafe import escape
-from flask import request
-from flask import Flask, jsonify
-
+from flask import Flask, redirect, request, session, url_for
+import requests
+import os
+import base64
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)
 
-@app.route("/")
-def index():
-    return 'Index Page'
+CLIENT_ID = "TON_CLIENT_ID"
+CLIENT_SECRET = "TON_CLIENT_SECRET"
+REDIRECT_URI = "http://127.0.0.1:5000/callback"
+SCOPE = "user-read-private user-read-email"
 
-def home():
-    return "Hello, Flask !"
-
-@app.route('/user/<username>')
-def show_user_profile(username):
-    # show the user profile for that user
-    return f'User {escape(username)}'
-'''@app.route('/post/<int:post_id>')
-def show_post(post_id):
-    # show the post with the given id, the id is an integer
-    return f'Post {post_id}'
-
-@app.route('/path/<path:subpath>')
-def show_subpath(subpath):
-    # show the subpath after /path/
-    return f'Subpath {escape(subpath)}'
-
-@app.route("/me")
-def me_api():
-    user = get_current_user()
-    return {
-        "username": user.username,
-        "theme": user.theme,
-        "image": url_for("user_image", filename=user.image),
+def get_token(code):
+    url = "https://accounts.spotify.com/api/token"
+    
+    headers = {
+        "Authorization": "Basic " + base64.b64encode(
+            f"{CLIENT_ID}:{CLIENT_SECRET}".encode()
+        ).decode(),
+        "Content-Type": "application/x-www-form-urlencoded",
     }
 
-@app.route("/users")
-def users_api():
-    users = get_all_users()
-    return [user.to_json() for user in users]
-'''
-@app.route('/login', methods=['POST', 'GET'])
-def login():
-    error = None
-    if request.method == 'POST':
-        if valid_login(request.form['username'],
-                       request.form['password']):
-            return log_the_user_in(request.form['username'])
-        else:
-            error = 'Invalid username/password'
-    # the code below is executed if the request method
-    # was GET or the credentials were invalid
-    return render_template('login.html', error=error)
+    payload = {
+        "grant_type": "authorization_code",
+        "code": code,
+        "redirect_uri": REDIRECT_URI,
+    }
 
-###### Appel d API ######
+    response = requests.post(url, headers=headers, data=payload)
+    return response.json()
 
 
-app = Flask(__name__)
+@app.route("/")
+def home():
+    auth_url = (
+        "https://accounts.spotify.com/authorize"
+        f"?response_type=code&client_id={CLIENT_ID}"
+        f"&redirect_uri={REDIRECT_URI}&scope={SCOPE}"
+    )
+    return f"<a href='{auth_url}'>Se connecter avec Spotify</a>"
 
-@app.route("/call_api")
-def call_api():
-    response = request.get("https://api.github.com")
+
+@app.route("/callback")
+def callback():
+    code = request.args.get("code")
+    token_info = get_token(code)
+    access_token = token_info.get("access_token")
+
+    # Stocker le token en session
+    session["token"] = access_token
+
+    return redirect(url_for("profile"))
+
+
+@app.route("/profile")
+def profile():
+    token = session.get("token")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    response = requests.get("https://api.spotify.com/v1/me", headers=headers)
     data = response.json()
-    return jsonify(data)
+    return f"Bonjour {data['display_name']} !"
+### suggerer les recommandations de musique basées sur les préférences de l'utilisateur###
+@app.route("/recoSpotify")
+def recommendations(limit,country,music_type,track_list):
+    token = session.get("token")
+    headers = {"Authorization": f"Bearer {token}"}
+    params = {
+        "limit": limit,
+        "market": country,
+        "seed_genres": music_type,
+        "seed_tracks": track_list
+        }
+    response = requests.get("https://api.spotify.com/v1/recommendations", headers=headers, params=params)
+    reco= response.json()
+    return reco
+
 
 if __name__ == "__main__":
     app.run(debug=True)
