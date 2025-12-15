@@ -1,13 +1,32 @@
 <script setup lang="ts">
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
-import { wait } from "@/functions/utils"
 import { ref } from "vue"
+import { useRouter } from "vue-router"
 
+const router = useRouter();
 const isLoading = ref(false)
+
+const token = localStorage.getItem("spotify-token")
+if (token !== null) router.replace("/profile")
+
 const signIn = async () => {
   isLoading.value = true
-  window.location = `http://localhost:5000/callback`
+
+  try {
+    const response = await fetch(`http://localhost:5000/signin`, { method: "GET" })
+    if (!response.ok) throw new Error("Could not signin with spotify")
+
+    const json = await response.json()
+    const token = json.access_token;
+    localStorage.setItem("spotify-token", token);
+    router.push("/profile");
+  } catch (error) {
+    alert("Could not log in")
+    console.log(error);
+  } finally {
+    isLoading.value = false
+  }
 }
 </script>
 
