@@ -1,5 +1,5 @@
 cd backend
-start "" python main.py
+start "" python APICall.py
 
 cd ../frontend
 start "" npm run dev

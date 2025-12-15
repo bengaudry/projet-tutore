@@ -3,15 +3,11 @@ import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { wait } from "@/functions/utils"
 import { ref } from "vue"
-import { useRouter } from "vue-router"
-
-const router = useRouter()
 
 const isLoading = ref(false)
 const signIn = async () => {
   isLoading.value = true
-  await wait(2000)
-  router.push("/profile")
+  window.location = `http://localhost:5000/callback`
 }
 </script>
 
