@@ -1,3 +1,4 @@
+import { API_URL } from "@/lib/constants"
 import { wait } from "../utils"
 
 export type MusicCompatibility = {
@@ -13,6 +14,13 @@ export type MusicCompatibility = {
     tempo: number
     valence: number
   }
+}
+
+export type SearchResult = {
+  id: string
+  name: string
+  artist: string
+  compatibility: number
 }
 
 export class BackendApi {
@@ -49,11 +57,21 @@ export class BackendApi {
     }
   }
 
-  public static async searchMusic(query: string): Promise<string[] | null> {
+  public static async searchMusic(query: string): Promise<SearchResult[] | null> {
     try {
-      await wait(1000) // simule le temps de réponse de l'api
-      return ["Musique 1", "Musique 2", "Musique 3"]
+      const res = await fetch(API_URL + `/search?q=${encodeURIComponent(query)}`, {
+        method: "GET",
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+      })
+      if (!res.ok) {
+        throw new Error("Network response was not ok")
+      }
+      const data = await res.json()
+      return data.results
     } catch (error) {
+      console.log(error)
       return null
     }
   }

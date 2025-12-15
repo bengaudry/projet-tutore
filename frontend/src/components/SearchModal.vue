@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { RouterLink } from "vue-router"
-import { DialogClose, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
+import { DialogClose, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
 import { BackendApi } from "@/functions/api/backend"
 import { ref } from "vue"
-import { Spinner } from "./ui/spinner"
+import { RouterLink } from "vue-router"
 
 const query = ref("")
 const results = ref<any[] | null | undefined>([])
@@ -60,12 +61,28 @@ function searchMusic() {
     <!-- Affichage des résultats -->
     <ul v-if="results && results.length > 0">
       <li v-for="(result, index) in results" :key="index">
-        <DialogClose>
-          <RouterLink :to="`/music-compatibility/${result}`">
-            {{ result }}
-          </RouterLink>
+        <DialogClose class="w-full">
+          <a :href="`/music-compatibility/${result.id}`">
+            <div class="flex flex-row items-center gap-4 justify-between hover:bg-neutral-800 p-3 rounded-lg">
+              <div class="text-left">
+                <h5 class="font-medium text-lg leading-5">{{ result.name }}</h5>
+                <p class="text-neutral-500 mt-0 leading-4">{{ result.artist }}</p>
+              </div>
+              <Badge
+                variant="secondary"
+                :class="
+                  result.compatibility < 0.3
+                    ? 'bg-red-500'
+                    : result.compatibility < 0.7
+                      ? 'bg-yellow-500'
+                      : 'bg-green-500'
+                "
+                >{{ result.compatibility }}</Badge
+              >
+            </div>
+          </a>
         </DialogClose>
-        <Separator v-if="index !== results.length - 1" class="my-4" />
+        <Separator v-if="index !== results.length - 1" />
       </li>
     </ul>
 

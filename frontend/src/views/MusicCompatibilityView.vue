@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Card, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { BackendApi, type MusicCompatibility } from "@/functions/api/backend"
 import { SpotifyApi } from "@/functions/api/spotify"
 import { computed, ref, watch } from "vue"
@@ -85,39 +86,38 @@ const chartHeight = computed(() => window.innerHeight / 1.5)
 
 <template>
   <main class="p-6">
-    <div v-if="musicTitle">
-      <h1>Compatibilité avec {{ musicTitle }}</h1>
+    <div class="mb-6">
+      <h1 v-if="musicTitle">Compatibilité avec {{ musicTitle }}</h1>
       
+      <div v-else-if="musicTitle === null">
+        <p>Erreur : cette musique n'existe pas</p>
+      </div>
       
-      <div>
-        <div v-if="musicCompatibility" class="apexcharts-theme-dark mt-6">
-          <Card class="border-border">
-            <CardHeader>
-              <CardTitle>
-                {{ musicCompatibility.compatibilityPercentage }}% compatible
-              </CardTitle>
-            </CardHeader>
-          </Card>
-
-          <apexchart type="radar" :height="chartHeight" :options="chartOptions" :series="series" />
-        </div>
-
-        <div v-else-if="musicCompatibility === null">
-          <p>Erreur : impossible de calculer la compatibilité</p>
-        </div>
-
-        <div v-else>
-          <p>Calcul de la compatibilité...</p>
-        </div>
+      <!-- musicTitle is loading -->
+      <div v-if="musicTitle === undefined">
+        <Skeleton class="h-12 w-96" />
       </div>
     </div>
 
-    <div v-else-if="musicTitle === null">
-      <p>Erreur : cette musique n'existe pas</p>
-    </div>
+    <div v-if="musicTitle !== null">
+      <div v-if="musicCompatibility" class="apexcharts-theme-dark mt-6">
+        <Card class="border-border">
+          <CardHeader>
+            <CardTitle> {{ musicCompatibility.compatibilityPercentage }}% compatible </CardTitle>
+          </CardHeader>
+        </Card>
 
-    <div v-else>
-      <p>Chargement...</p>
+        <apexchart type="radar" :height="chartHeight" :options="chartOptions" :series="series" />
+      </div>
+
+      <div v-else-if="musicCompatibility === null">
+        <p>Erreur : impossible de calculer la compatibilité</p>
+      </div>
+
+      <div v-else>
+        <Skeleton class="h-24 w-full" />
+        <Skeleton class="h-[400px] max-h-full w-[400px] max-w-full mt-6 mx-auto" />
+      </div>
     </div>
   </main>
 </template>
