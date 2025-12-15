@@ -1,8 +1,8 @@
-from flask import Flask, redirect, session
+from flask import Flask, redirect, session, make_response, jsonify
+from dotenv import load_dotenv
 import requests
 import os
 import base64
-from dotenv import load_dotenv
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -40,7 +40,10 @@ def signin():
     # Stocker le token en session
     session["token"] = access_token
 
-    return redirect(f"http://localhost:5173/redirect-spotify?token={access_token}")
+    resp = make_response(jsonify(dict(access_token=access_token)))
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+
+    return resp
 
 
 @app.route("/profile")
