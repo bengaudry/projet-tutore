@@ -1,17 +1,19 @@
-from flask import Flask, redirect, request, session, url_for
+from flask import Flask, redirect, session
 import requests
 import os
 import base64
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
-CLIENT_ID = "TON_CLIENT_ID"
-CLIENT_SECRET = "TON_CLIENT_SECRET"
-REDIRECT_URI = "http://127.0.0.1:5000/callback"
+CLIENT_ID = os.getenv("CLIENT_ID")
+CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+REDIRECT_URI = "http://127.0.0.1:5000/signin"
 SCOPE = "user-read-private user-read-email"
 
-def get_token(code):
+def get_token():
+    print("get token")
     url = "https://accounts.spotify.com/api/token"
     
     headers = {
@@ -22,8 +24,7 @@ def get_token(code):
     }
 
     payload = {
-        "grant_type": "authorization_code",
-        "code": code,
+        "grant_type": "client_credentials",
         "redirect_uri": REDIRECT_URI,
     }
 
@@ -31,26 +32,15 @@ def get_token(code):
     return response.json()
 
 
-@app.route("/")
-def home():
-    auth_url = (
-        "https://accounts.spotify.com/authorize"
-        f"?response_type=code&client_id={CLIENT_ID}"
-        f"&redirect_uri={REDIRECT_URI}&scope={SCOPE}"
-    )
-    return f"<a href='{auth_url}'>Se connecter avec Spotify</a>"
-
-
-@app.route("/callback")
-def callback():
-    code = request.args.get("code")
-    token_info = get_token(code)
+@app.route("/signin")
+def signin():
+    token_info = get_token()
     access_token = token_info.get("access_token")
 
     # Stocker le token en session
     session["token"] = access_token
 
-    return redirect(url_for("profile"))
+    return redirect(f"http://localhost:5173/redirect-spotify?token={access_token}")
 
 
 @app.route("/profile")
@@ -64,5 +54,18 @@ def profile():
     return f"Bonjour {data['display_name']} !"
 
 
+# Pour les tests :
+@app.route("/")
+def home():
+    auth_url = (
+        "https://accounts.spotify.com/authorize"
+        f"?response_type=code&client_id={CLIENT_ID}"
+        f"&redirect_uri={REDIRECT_URI}&scope={SCOPE}"
+    )
+    return f"<a href='{auth_url}'>Se connecter avec Spotify</a>"
+
+
+
 if __name__ == "__main__":
+    load_dotenv()
     app.run(debug=True)

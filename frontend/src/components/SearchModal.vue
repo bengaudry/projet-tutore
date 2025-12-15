@@ -9,7 +9,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import { BackendApi } from "@/functions/api/backend"
 import { ref } from "vue"
-import { RouterLink } from "vue-router"
 
 const query = ref("")
 const results = ref<any[] | null | undefined>([])
