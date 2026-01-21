@@ -1,3 +1,5 @@
+import type { ImageObject } from "./SpotifyCommon"
+
 export type SpotifyProfile = {
   display_name: string | null
   email: string
@@ -8,10 +10,6 @@ export type SpotifyProfile = {
   followers: {
     total: number
   }
-  images: Array<{
-    url: string
-    height: number | null
-    width: number | null
-  }>
+  images: Array<ImageObject>
   [key: string]: any
 }

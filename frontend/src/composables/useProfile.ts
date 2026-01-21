@@ -41,6 +41,6 @@ export function useProfile() {
   return {
     profile: readonly(profile),
     fetchProfile,
-    profileError: readonly(profile)
+    profileError: readonly(profileError)
   }
 }

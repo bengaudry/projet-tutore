@@ -11,7 +11,7 @@ app.secret_key = os.urandom(24)
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 REDIRECT_URI = "http://127.0.0.1:5173/redirect-spotify"
-SCOPE = "user-read-private user-read-email"
+SCOPE = "user-read-private user-read-email user-top-read"
 
 
 @app.route("/begin-signin")
@@ -89,7 +89,7 @@ def profile():
         resp = make_response(jsonify({"error": "No token provided"}))
         resp.headers["Access-Control-Allow-Origin"] = "*"
         return resp, 400
-    
+
     headers = {"Authorization": f"Bearer {token}"}
 
     response = requests.get("https://api.spotify.com/v1/me", headers=headers)
@@ -109,6 +109,81 @@ def profile():
     print(data)
 
     resp = make_response(data)
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+
+    return resp
+
+
+
+@app.route("/top-tracks")
+def top_tracks():
+    print("[GET] /top-tracks")
+    token = request.args.get("token")
+    
+    if not token:
+        resp = make_response(jsonify({"error": "No token provided"}))
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp, 400
+    
+    headers = {"Authorization": f"Bearer {token}"}
+
+    response = requests.get(
+        "https://api.spotify.com/v1/me/top/tracks?limit=50&time_range=long_term",
+        headers=headers,
+    )
+
+    print(f"Spotify API response status: {response.status_code}")
+    print(f"Spotify API response: {response.text}")
+
+    if response.status_code != 200:
+        resp = make_response(
+            jsonify({"error": "Failed to fetch top tracks"})
+        )
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp, response.status_code
+
+    data = response.json()
+
+    print(data)
+
+    resp = make_response(data["items"])
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+
+    return resp
+
+
+@app.route("/top-artists")
+def top_artists():
+    print("[GET] /top-artists")
+    token = request.args.get("token")
+    
+    if not token:
+        resp = make_response(jsonify({"error": "No token provided"}))
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp, 400
+    
+    headers = {"Authorization": f"Bearer {token}"}
+
+    response = requests.get(
+        "https://api.spotify.com/v1/me/top/artists?limit=50&time_range=long_term",
+        headers=headers,
+    )
+
+    print(f"Spotify API response status: {response.status_code}")
+    print(f"Spotify API response: {response.text}")
+
+    if response.status_code != 200:
+        resp = make_response(
+            jsonify({"error": "Failed to fetch top tracks"})
+        )
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp, response.status_code
+
+    data = response.json()
+
+    print(data)
+
+    resp = make_response(data["items"])
     resp.headers["Access-Control-Allow-Origin"] = "*"
 
     return resp
