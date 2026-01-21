@@ -1,41 +1,35 @@
 <script setup lang="ts">
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
+import { useSession } from "@/composables/useSession"
 import { ref } from "vue"
 import { useRouter } from "vue-router"
 
-const router = useRouter();
+const router = useRouter()
+const { isSignedIn, signIn } = useSession()
+
+// redirect to /profile if signed in
+if (isSignedIn.value === true) router.replace("/profile")
+
 const isLoading = ref(false)
+const signInError = ref<string | null>(null)
 
-const token = localStorage.getItem("spotify-token")
-if (token !== null) router.replace("/profile")
-
-const signIn = async () => {
+async function handleSignIn() {
   isLoading.value = true
-
-  try {
-    const response = await fetch(`http://localhost:5000/signin`, { method: "GET" })
-    if (!response.ok) throw new Error("Could not signin with spotify")
-
-    const json = await response.json()
-    const token = json.access_token;
-    localStorage.setItem("spotify-token", token);
-    router.push("/profile");
-  } catch (error) {
-    alert("Could not log in")
-    console.log(error);
-  } finally {
-    isLoading.value = false
-  }
+  signIn()
 }
 </script>
 
 <template>
   <main>
+    <div v-if="signInError !== null" class="bg-red-500:20 rounded-md border-red-500 border">
+      {{ signInError }}
+    </div>
+
     <Button
       size="lg"
       v-bind:disabled="isLoading"
-      v-on:click="signIn"
+      v-on:click="handleSignIn"
       class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
     >
       <Spinner class="size-6" v-if="isLoading" />

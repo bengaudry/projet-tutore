@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import { RouterView, useRouter } from "vue-router"
 import Navbar from "./components/Navbar.vue"
-import { computed } from "vue"
+import { computed, onMounted } from "vue"
+import { useSession } from "./composables/useSession"
 
 const router = useRouter()
+const { initSession } = useSession()
+
+onMounted(() => {
+  initSession()
+})
+
 const pagesWithNavbar = ["/profile", "/music-compatibility/:musicId"]
 const showNavbar = computed(() => {
   return pagesWithNavbar.some((path) =>

@@ -85,7 +85,7 @@ const chartHeight = computed(() => window.innerHeight / 1.5)
 </script>
 
 <template>
-  <main class="p-6">
+  <main class="p-6 max-w-screen-lg mx-auto">
     <div class="mb-6">
       <h1 v-if="musicTitle">Compatibilité avec {{ musicTitle }}</h1>
       
