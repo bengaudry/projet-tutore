@@ -22,7 +22,7 @@ if (profile.value === null) {
 
 <template>
   <main class="p-6 max-w-screen-lg mx-auto">
-    <ErrorWrapper v-if="profileError !== null" :error-message="profileError" />
+    <ErrorWrapper v-if="profileError !== null" :error-message="profileError" class="mb-6" />
 
     <h1>Mon profil musical</h1>
     <MusicalProfileHeader />
