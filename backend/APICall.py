@@ -74,6 +74,12 @@ def redirect_spotify():
         resp.headers["Access-Control-Allow-Origin"] = "*"
         return resp, 400
 
+
+    # TODO : Récupérer les infos utilisateur et les stocker dans la DB
+    # TODO : Récupérer les tops musiques, en déduire les tops genres et les stocker dans la DB
+    # TODO : Récupérer les tops artistes et les stocker dans la DB
+
+
     # Redirect to frontend with token
     resp = make_response(jsonify(token_info))
     resp.headers["Access-Control-Allow-Origin"] = "*"
@@ -83,15 +89,17 @@ def redirect_spotify():
 
 @app.route("/profile")
 def profile():
+    # TODO : Récupérer les infos utilisateur depuis la DB au lieu de l'API Spotify
     print("[GET] /profile")
     token = request.args.get("token")
-    
+
     if not token:
         resp = make_response(jsonify({"error": "No token provided"}))
         resp.headers["Access-Control-Allow-Origin"] = "*"
         return resp, 400
 
     headers = {"Authorization": f"Bearer {token}"}
+
 
     response = requests.get("https://api.spotify.com/v1/me", headers=headers)
 
@@ -118,15 +126,17 @@ def profile():
 
 @app.route("/top-tracks")
 def top_tracks():
+    # TODO : Récupérer les tops musiques depuis la DB au lieu de l'API Spotify
     print("[GET] /top-tracks")
     token = request.args.get("token")
-    
+
     if not token:
         resp = make_response(jsonify({"error": "No token provided"}))
         resp.headers["Access-Control-Allow-Origin"] = "*"
         return resp, 400
-    
+
     headers = {"Authorization": f"Bearer {token}"}
+
 
     response = requests.get(
         "https://api.spotify.com/v1/me/top/tracks?limit=50&time_range=long_term",
@@ -152,14 +162,15 @@ def top_tracks():
 
 @app.route("/top-artists")
 def top_artists():
+    # TODO : Récupérer les tops artistes depuis la DB au lieu de l'API Spotify
     print("[GET] /top-artists")
     token = request.args.get("token")
-    
+
     if not token:
         resp = make_response(jsonify({"error": "No token provided"}))
         resp.headers["Access-Control-Allow-Origin"] = "*"
         return resp, 400
-    
+
     headers = {"Authorization": f"Bearer {token}"}
 
     response = requests.get(
