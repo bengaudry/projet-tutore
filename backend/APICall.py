@@ -12,7 +12,7 @@ app.secret_key = os.urandom(24)
 
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-REDIRECT_URI = "http://127.0.0.1:5173/redirect-spotify"
+REDIRECT_URI = "http://127.0.0.1:5000/redirect-spotify"
 SCOPE = "user-read-private user-read-email user-top-read"
 
 
@@ -28,6 +28,57 @@ def beginSignin():
     }
     auth_url = "https://accounts.spotify.com/authorize?" + urllib.parse.urlencode(params)
     return redirect(auth_url)
+
+
+@app.route("/redirect-spotify")
+def redirect_spotify():
+    """Handle Spotify's redirect"""
+    code = request.args.get("code")
+    error = request.args.get("error")
+
+    if error:
+        resp = make_response(jsonify({"error": error}))
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp, 400
+
+    if not code:
+        resp = make_response(jsonify({"error": "No authorization code received"}))
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp, 400
+
+    # Exchange authorization code for access token
+    url = "https://accounts.spotify.com/api/token"
+
+    headers = {
+        "Authorization": "Basic " + base64.b64encode(
+            f"{CLIENT_ID}:{CLIENT_SECRET}".encode()
+        ).decode(),
+        "Content-Type": "application/x-www-form-urlencoded",
+    }
+
+    payload = {
+        "grant_type": "authorization_code",
+        "code": code,
+        "redirect_uri": REDIRECT_URI,
+    }
+
+    response = requests.post(url, headers=headers, data=payload)
+    token_info = response.json()
+
+    print(token_info)
+
+    access_token = token_info.get("access_token")
+
+    if not access_token:
+        resp = make_response(jsonify({"error": "Failed to get access token"}))
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp, 400
+
+    # Redirect to frontend with token
+    resp = make_response(jsonify(token_info))
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+
+    return redirect(f"http://127.0.0.1:5173/redirect-spotify?token={access_token}")
 
 
 @app.route("/signin")
@@ -244,4 +295,4 @@ def home():
 
 if __name__ == "__main__":
     load_dotenv()
-    app.run(debug=True)
+    app.run(host="127.0.0.1", port=5000, debug=True)

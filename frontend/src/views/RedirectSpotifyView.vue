@@ -7,6 +7,9 @@ const router = useRouter()
 const { handleSpotifyRedirect } = useSession()
 handleSpotifyRedirect().then(() => {
   router.replace("/profile")
+}).catch((err) => {
+  console.error("Erreur lors de la redirection Spotify :", err)
+  router.replace("/")
 })
 
 </script>
