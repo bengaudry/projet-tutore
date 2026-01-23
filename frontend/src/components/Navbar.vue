@@ -6,21 +6,23 @@ import SearchModal from "./SearchModal.vue"
 </script>
 
 <template>
-  <header class="flex flex-row items-center justify-between gap-6 px-4 py-2 border-b border-border">
-    <nav>
-      <Button variant="link">
-        <RouterLink to="/profile">Profil</RouterLink>
-      </Button>
-    </nav>
-
-    <Dialog>
-      <DialogTrigger as-child>
-        <Button variant="secondary">
-          <i class="fi fi-rr-search"></i>
+  <header class="border-b border-border">
+    <div class="content flex flex-row items-center justify-between gap-6 px-4 py-2 max-w-screen-lg mx-auto">
+      <nav>
+        <Button variant="link">
+          <RouterLink to="/profile">Profil</RouterLink>
         </Button>
-      </DialogTrigger>
+      </nav>
 
-      <SearchModal />
-    </Dialog>
+      <Dialog>
+        <DialogTrigger as-child>
+          <Button variant="secondary">
+            <i class="fi fi-rr-search"></i>
+          </Button>
+        </DialogTrigger>
+
+        <SearchModal />
+      </Dialog>
+    </div>
   </header>
 </template>
