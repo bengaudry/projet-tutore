@@ -1,13 +1,4 @@
-import type { ImageObject } from "./SpotifyCommon"
-
-export type SimplifiedArtistObject = {
-  id: string
-  name: string
-  external_urls: {
-    spotify: string
-  }
-  [key: string]: any
-}
+import type { AlbumObject, ImageObject, SimplifiedArtistObject } from "./SpotifyCommon"
 
 export type ArtistObject = SimplifiedArtistObject & {
   genres: string[]
@@ -17,15 +8,7 @@ export type ArtistObject = SimplifiedArtistObject & {
 }
 
 export type TrackObject = {
-  album: {
-    album_type: "album" | "single" | "compilation"
-    total_tracks: number
-    id: string
-    name: string
-    release_date: string
-    artists: Array<SimplifiedArtistObject>
-    images: Array<ImageObject>
-  }
+  album: AlbumObject
   artists: Array<SimplifiedArtistObject>
   duration_ms: number
   explicit: boolean

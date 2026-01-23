@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import ErrorWrapper from "@/components/ErrorWrapper.vue"
 import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { BackendApi, type MusicCompatibility } from "@/functions/api/backend"
-import { SpotifyApi } from "@/functions/api/spotify"
+import { useTrackDetails } from "@/composables/useTrackDetails"
 import { computed, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 import { type VueApexChartsComponentProps } from "vue3-apexcharts"
@@ -15,20 +15,28 @@ const musicId = computed(() => {
   return Array.isArray(id) ? id[0] : id
 })
 
-const musicTitle = ref<string | undefined | null>(undefined)
-const musicCompatibility = ref<MusicCompatibility | undefined | null>(undefined)
+const { trackDetails, fetchTrackDetails } = useTrackDetails()
 
-// fetch music title and compatibility details when musicId changes
 watch(
   musicId,
-  async (newValue) => {
-    musicTitle.value = newValue ? await SpotifyApi.getMusicTitle(newValue) : undefined
-    musicCompatibility.value = newValue
-      ? await BackendApi.getMusicCompatibilityDetails(newValue)
-      : undefined
+  (newMusicId) => {
+    if (newMusicId) {
+      fetchTrackDetails(newMusicId)
+    }
   },
   { immediate: true },
 )
+
+// ApexCharts series data for radar chart
+const series = computed(() => {
+  if (!trackDetails.value?.compatibility_score) return []
+  return [
+    {
+      name: "Compatibilité",
+      data: [trackDetails.value.compatibility_score*100],
+    },
+  ]
+})
 
 // ApexCharts options for radar chart
 const chartOptions: VueApexChartsComponentProps["options"] = {
@@ -40,15 +48,7 @@ const chartOptions: VueApexChartsComponentProps["options"] = {
   },
   xaxis: {
     categories: [
-      "Acousticness",
-      "Danceability",
-      "Energy",
-      "Instrumentalness",
-      "Liveness",
-      "Loudness",
-      "Speechiness",
-      "Tempo",
-      "Valence",
+      "Compatibilité",
     ],
   },
   yaxis: {
@@ -68,56 +68,74 @@ const chartOptions: VueApexChartsComponentProps["options"] = {
   },
 }
 
-// ApexCharts series data for radar chart
-const series = computed(() => {
-  if (!musicCompatibility.value?.details) return []
-  return [
-    {
-      name: "Compatibilité",
-      data: Object.values(musicCompatibility.value.details).map((value) =>
-        Number(value.toFixed(2)),
-      ),
-    },
-  ]
-})
-
 const chartHeight = computed(() => window.innerHeight / 1.5)
+
+const formatDuration = (ms: number) => {
+  const totalSeconds = Math.floor(ms / 1000)
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`
+}
 </script>
 
 <template>
   <main class="p-6 max-w-screen-lg mx-auto">
-    <div class="mb-6">
-      <h1 v-if="musicTitle">Compatibilité avec {{ musicTitle }}</h1>
-      
-      <div v-else-if="musicTitle === null">
-        <p>Erreur : cette musique n'existe pas</p>
-      </div>
-      
-      <!-- musicTitle is loading -->
-      <div v-if="musicTitle === undefined">
-        <Skeleton class="h-12 w-96" />
-      </div>
-    </div>
+    <div v-if="trackDetails" class="mb-6">
+      <header class="flex flex-col sm:flex-row sm:items-end gap-6">
+        <div class="relative">
+          <img
+            :src="trackDetails.album.images[0]?.url"
+            alt="Album cover"
+            class="w-58 h-58 mr-4 absolute -z-10 inset-0 blur-xl opacity-60"
+          />
+          <img
+            :src="trackDetails.album.images[0]?.url"
+            alt="Album cover"
+            class="w-52 h-52 mr-4 z-20 rounded-md"
+          />
+        </div>
+        <div>
+          <a
+            :href="trackDetails.external_urls.spotify"
+            target="_blank"
+            class="underline underline-offset-4"
+          >
+            <h1 v-if="trackDetails" class="mb-2">{{ trackDetails.name }}</h1>
+          </a>
+          <h2 v-if="trackDetails">
+            {{ trackDetails.artists.map((artist) => artist.name).join(", ") }}
+          </h2>
+          <p class="text-neutral-400 mb-4">
+            {{ trackDetails.album.name }}
+            &bull;
+            {{ new Date(trackDetails.album.release_date).getFullYear() }}
+            &bull;
+            {{ formatDuration(trackDetails.duration_ms) }}
+          </p>
+        </div>
+      </header>
 
-    <div v-if="musicTitle !== null">
-      <div v-if="musicCompatibility" class="apexcharts-theme-dark mt-6">
+      <audio v-if="trackDetails?.preview_url" :src="trackDetails.preview_url" controls></audio>
+
+      <div class="apexcharts-theme-dark mt-6">
         <Card class="border-border">
           <CardHeader>
-            <CardTitle> {{ musicCompatibility.compatibilityPercentage }}% compatible </CardTitle>
+            <CardTitle
+              >{{ trackDetails.compatibility_score * 100 }}% compatible avec votre profil
+              musical</CardTitle
+            >
           </CardHeader>
         </Card>
 
         <apexchart type="radar" :height="chartHeight" :options="chartOptions" :series="series" />
       </div>
-
-      <div v-else-if="musicCompatibility === null">
-        <p>Erreur : impossible de calculer la compatibilité</p>
-      </div>
-
-      <div v-else>
-        <Skeleton class="h-24 w-full" />
-        <Skeleton class="h-[400px] max-h-full w-[400px] max-w-full mt-6 mx-auto" />
-      </div>
     </div>
+
+    <!-- trackDetails est en chargement -->
+    <div v-if="trackDetails === undefined">
+      <Skeleton class="h-12 w-96" />
+    </div>
+
+    <ErrorWrapper v-if="trackDetails === null" error-message="Cette musique n'existe pas" />
   </main>
 </template>

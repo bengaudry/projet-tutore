@@ -1,5 +1,7 @@
 from flask import Flask, redirect, session, make_response, jsonify, request
 from dotenv import load_dotenv
+from random import randint
+
 import requests
 import os
 import base64
@@ -133,7 +135,6 @@ def top_tracks():
     )
 
     print(f"Spotify API response status: {response.status_code}")
-    print(f"Spotify API response: {response.text}")
 
     if response.status_code != 200:
         resp = make_response(
@@ -143,8 +144,6 @@ def top_tracks():
         return resp, response.status_code
 
     data = response.json()
-
-    print(data)
 
     resp = make_response(data["items"])
     resp.headers["Access-Control-Allow-Origin"] = "*"
@@ -183,7 +182,49 @@ def top_artists():
 
     print(data)
 
-    resp = make_response(data["items"])
+    resp = make_response(jsonify(data["items"]))
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+
+    return resp
+
+
+@app.route("/track-details")
+def track_details():
+    print("[GET] /track-details")
+    token = request.args.get("token")
+    track_id = request.args.get("track_id")
+    
+    if not token:
+        resp = make_response(jsonify({"error": "No token provided"}))
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp, 400
+
+    if not track_id:
+        resp = make_response(jsonify({"error": "No track_id provided"}))
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp, 400
+    
+    headers = {"Authorization": f"Bearer {token}"}
+
+    response = requests.get(
+        f"https://api.spotify.com/v1/tracks/{track_id}",
+        headers=headers,
+    )
+
+    print(f"Spotify API response status: {response.status_code}")
+
+    if response.status_code != 200:
+        resp = make_response(
+            jsonify({"error": "Failed to fetch track details"})
+        )
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp, response.status_code
+
+    data = response.json()
+
+    data["compatibility_score"] = randint(0, 100) / 100 # TODO : calculer la vraie compatibilité
+
+    resp = make_response(jsonify(data))
     resp.headers["Access-Control-Allow-Origin"] = "*"
 
     return resp
