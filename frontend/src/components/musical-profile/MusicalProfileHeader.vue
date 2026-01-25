@@ -13,20 +13,20 @@ const { signOut } = useSession()
     <div class="flex flex-row items-center gap-6">
       <Avatar v-if="profile !== null" size="lg" class="h-16 w-16">
         <AvatarImage
-          v-if="profile.images?.length > 0 && profile.images[0]?.url"
-          :src="profile.images[0].url"
-          :alt="profile.display_name"
-          :width="profile.images[0].width || 64"
-          :height="profile.images[0].height || 64"
+          v-if="profile.picture_url"
+          :src="profile.picture_url"
+          :alt="profile.username"
+          :width="64"
+          :height="64"
         />
         <AvatarFallback class="text-2xl">
-          {{ profile?.display_name?.charAt(0).toUpperCase() }}
+          {{ profile?.username?.charAt(0).toUpperCase() }}
         </AvatarFallback>
       </Avatar>
 
       <div>
         <a :href="profile?.external_urls?.spotify" class="underline" target="_blank">
-          <h5 class="text-xl font-semibold">{{ profile?.display_name }}</h5>
+          <h5 class="text-xl font-semibold">{{ profile?.username }}</h5>
         </a>
         <p>{{ profile?.email }}</p>
       </div>

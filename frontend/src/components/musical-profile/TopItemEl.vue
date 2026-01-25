@@ -3,7 +3,7 @@ defineProps<{
   index: number
   title: string
   subtitle: string
-  imgUrl: string | undefined
+  imgUrl: string | null
   imgAlt: string
   imgRadius: "full" | "md"
   linksTo?: string
@@ -20,7 +20,7 @@ defineProps<{
       >
         <span class="font-semibold text-lg text-neutral-500">{{ index + 1 }}</span>
         <img
-          :src="imgUrl"
+          :src="imgUrl ?? undefined"
           :alt="imgAlt"
           :class="['w-16 h-16 object-cover', imgRadius === 'full' ? 'rounded-full' : 'rounded-md']"
         />

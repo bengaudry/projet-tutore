@@ -1,7 +1,7 @@
 import { useSession } from "@/composables/useSession"
 import { API_URL } from "@/lib/constants"
+import type { TopArtist, TopTrack } from "@/types/DbTypes"
 import type { TrackResearchItem } from "@/types/SpotifyTrackResearch"
-import type { ArtistObject, TrackObject } from "@/types/TopItems"
 import type { SpotifyTrackDetails } from "@/types/TrackDetails"
 
 export class BackendApi {
@@ -16,7 +16,7 @@ export class BackendApi {
    */
   public static async getTrackDetails(trackId: string): Promise<SpotifyTrackDetails> {
     return this.fetchApi(`/track-details`, {
-      params: { track_id: trackId, token: this.getToken() },
+      params: { track_id: trackId, token: this.getToken(), user_id: this.getUserId() },
     })
   }
 
@@ -24,16 +24,16 @@ export class BackendApi {
    * Récupère les musiques les plus écoutées de l'utilisateur via l'API backend.
    * @returns une liste des musiques au format JSON renvoyées par l'API spotify
    */
-  public static async getUserTopTracks(): Promise<Array<TrackObject>> {
-    return this.fetchApi(`/top-tracks`, { params: { token: this.getToken() } })
+  public static async getUserTopTracks(): Promise<Array<TopTrack>> {
+    return this.fetchApi(`/top-tracks`, { params: { token: this.getToken(), user_id: this.getUserId() } })
   }
 
   /**
    * Récupère les artistes les plus écoutés de l'utilisateur via l'API backend.
    * @returns une liste des artistes au format JSON renvoyées par l'API spotify
    */
-  public static async getUserTopArtists(): Promise<Array<ArtistObject>> {
-    return this.fetchApi(`/top-artists`, { params: { token: this.getToken() } })
+  public static async getUserTopArtists(): Promise<Array<TopArtist>> {
+    return this.fetchApi(`/top-artists`, { params: { token: this.getToken(), user_id: this.getUserId() } })
   }
 
   /**
@@ -42,7 +42,7 @@ export class BackendApi {
    * @returns les musiques au format JSON renvoyées par l'API spotify
    */
   public static async researchTracks(query: string): Promise<Array<TrackResearchItem>> {
-    return this.fetchApi(`/track-research`, { params: { q: query, token: this.getToken() } })
+    return this.fetchApi(`/track-research`, { params: { q: query, token: this.getToken(), user_id: this.getUserId() } })
   }
 
   /**
@@ -90,5 +90,13 @@ export class BackendApi {
       throw new Error("No session token set")
     }
     return sessionToken.value
+  }
+
+  private static getUserId() {
+    const { userId } = useSession()
+    if (!userId.value) {
+      throw new Error("No user ID set")
+    }
+    return userId.value
   }
 }
