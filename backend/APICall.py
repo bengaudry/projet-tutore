@@ -326,7 +326,7 @@ def track_research():
     headers = {"Authorization": f"Bearer {token}"}
 
     response = requests.get(
-        f"https://api.spotify.com/v1/search?q={urllib.parse.quote(query)}&type=track&limit=10",
+        f"https://api.spotify.com/v1/search?q={urllib.parse.quote(query)}&type=track&limit=5",
         headers=headers,
     )
 
