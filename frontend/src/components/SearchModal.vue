@@ -7,23 +7,10 @@ import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
-import { BackendApi } from "@/functions/api/backend"
-import { ref } from "vue"
+import { useTrackResearch } from "@/composables/useTrackResearch"
 
-const query = ref("")
-const results = ref<any[] | null | undefined>([])
+const { query, searchTrack, isLoading, error, results } = useTrackResearch()
 
-function searchMusic() {
-  if (query.value.trim().length < 3) return // pas de recherche pour une query de moins de 3 caractères
-  results.value = undefined // afficher le skeleton de chargement
-  BackendApi.searchMusic(query.value.trim())
-    .then((queryResults) => {
-      results.value = queryResults
-    })
-    .catch(() => {
-      results.value = null
-    })
-}
 </script>
 
 <template>
@@ -33,23 +20,23 @@ function searchMusic() {
     </DialogHeader>
 
     <!-- Formulaire de recherche -->
-    <form action="" v-on:submit.prevent="searchMusic">
+    <form action="" v-on:submit.prevent="searchTrack">
       <ButtonGroup class="w-full">
         <Input type="text" name="query" v-model="query" placeholder="Rechercher une musique" />
         <Button
           type="submit"
           variant="secondary"
-          :disabled="results === undefined || query.trim().length < 3"
+          :disabled="isLoading || query.trim().length < 3"
         >
-          <Spinner v-if="results === undefined"></Spinner>
-          <i v-if="results !== undefined" class="fi fi-rr-search text-sm translate-y-0.5"></i>
+          <Spinner v-if="isLoading"></Spinner>
+          <i v-if="!isLoading" class="fi fi-rr-search text-sm translate-y-0.5"></i>
           Rechercher
         </Button>
       </ButtonGroup>
     </form>
 
     <!-- Skeleton pour le chargement des résultats -->
-    <ul v-if="results === undefined">
+    <ul v-if="isLoading">
       <Skeleton class="h-5 w-[250px]" />
       <Separator class="my-4" />
       <Skeleton class="h-5 w-[250px]" />

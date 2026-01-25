@@ -19,6 +19,7 @@ pip install flask
 pip install dotenv
 pip install requests
 pip install urllib
+pip install mysql-connector-python
 ```
 
 -> Demander le fichier `.env`

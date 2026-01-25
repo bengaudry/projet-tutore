@@ -1,5 +1,0 @@
-export class BackendApi {
-  getData() {
-    return "Hello from backend!";
-  }
-}
