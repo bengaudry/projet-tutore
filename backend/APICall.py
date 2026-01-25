@@ -9,11 +9,16 @@ import os
 import base64
 import urllib.parse
 import mysql.connector
+
+import spotifyapi
+from spotifyapi import SpotifyException
 from collections import Counter
 
 
+# Flask app
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
+
 
 BACKEND_DOMAIN = "127.0.0.1"
 BACKEND_PORT = 5000
@@ -102,8 +107,9 @@ def redirect_spotify():
 
     headers = {"Authorization": f"Bearer {access_token}"}
 
+
     # DONE : Récupérer les infos utilisateur et les stocker dans la DB
-    me = requests.get(f"{SPOTIFY_API_BASE_URL}/v1/me", headers=headers).json()
+    me = spotifyapi.get_user_profile(access_token)
     email = me.get("email")
     username = me.get("display_name")
 
@@ -121,45 +127,10 @@ def redirect_spotify():
         db.commit()
         user_id = cursor.lastrowid
 
-    # Supprime les anciennes données utilisateur dans la DB
-    clear_user_data(cursor, user_id)
-
-    # DONE : Récupérer les tops musiques, en déduire les tops genres et les stocker dans la DB
-    tracks = requests.get(f"{SPOTIFY_API_BASE_URL}/v1/me/top/tracks?limit=50&time_range=short_term",
-        headers=headers
-    ).json().get("items", [])
-
-    cursor.execute("DELETE FROM TOP_MUSICS WHERE USER_ID = %s", (user_id,))
-
-    for rank, track in enumerate(tracks, start=1):
-        cursor.execute(
-            """
-            INSERT INTO TOP_MUSICS (USER_ID, TRACK_NAME, ARTIST_NAME, RANKING, PERIOD)
-            VALUES (%s, %s, %s, %s, %s)
-            """,
-            (user_id, track["name"], track["artists"][0]["name"], rank, "long_term")
-        )
-
-    # DONE : Récupérer les tops artistes et les stocker dans la DB
-    artists = requests.get(
-        f"{SPOTIFY_API_BASE_URL}/v1/me/top/artists?limit=50&time_range=short_term",
-        headers=headers
-    ).json().get("items", [])
-
-    cursor.execute("DELETE FROM TOP_ARTISTS WHERE USER_ID = %s", (user_id,))
-
-    for rank, artist in enumerate(artists, start=1):
-        cursor.execute(
-            """
-            INSERT INTO TOP_ARTISTS (USER_ID, ARTIST_NAME, RANKING, PERIOD)
-            VALUES (%s, %s, %s, %s)
-            """,
-            (user_id, artist["name"], rank, "long_term")
-        )
+    # Met à jour les tops musiques et artistes de l'utilisateur dans la DB
+    store_user_top_items_in_db(cursor, access_token, user_id)    
 
     db.commit()
-
-
 
     # Redirect to frontend with token
     resp = make_response(jsonify(token_info))
@@ -216,71 +187,25 @@ def top_tracks():
         resp.headers["Access-Control-Allow-Origin"] = "*"
         return resp, 400
 
-    headers = {"Authorization": f"Bearer {token}"}
+    try:
+        tracks = spotifyapi.get_top_tracks(token)
+        # Récupérer les genres pour chaque morceau et les insérer dans top_genres
+        for track in tracks:
+            genres = get_track_genres(track, token)
+            # TODO : Insérer les genres dans la DB si besoin
+            track["genres"] = genres
 
+        resp = make_response(jsonify(tracks))
+        resp.headers["Access-Control-Allow-Origin"] = "*"
 
-    response = requests.get(
-        f"{SPOTIFY_API_BASE_URL}/v1/me/top/tracks?limit=50&time_range=short_term",
-        headers=headers,
-    )
-
-    print(f"Spotify API response status: {response.status_code}")
-
-    if response.status_code != 200:
+        return resp
+    except SpotifyException as e:
         resp = make_response(
-            jsonify({"error": "Failed to fetch top tracks"})
+            jsonify({"error": str(e)})
         )
         resp.headers["Access-Control-Allow-Origin"] = "*"
-        return resp, response.status_code
+        return resp, e.status_code
 
-    data = response.json()
-    tracks = data.get("items", [])
-
-    # Récupérer l'utilisateur dans la DB via le token
-    db = get_db()
-    cursor = db.cursor(dictionary=True)
-
-    response_me = requests.get("https://api.spotify.com/v1/me", headers=headers)
-    if response_me.status_code != 200:
-        resp = make_response(jsonify({"error": "Failed to fetch profile"}))
-        resp.headers["Access-Control-Allow-Origin"] = "*"
-        return resp, response_me.status_code
-
-    email = response_me.json().get("email")
-    cursor.execute("SELECT ID_USERS FROM USERS WHERE EMAIL = %s", (email,))
-    user = cursor.fetchone()
-    if not user:
-        resp = make_response(jsonify({"error": "User not found"}))
-        resp.headers["Access-Control-Allow-Origin"] = "*"
-        return resp, 404
-
-    user_id = user["ID_USERS"]
-    cursor.execute("DELETE FROM TOP_GENRES WHERE USER_ID = %s", (user_id,))
-
-    # Récupérer les genres pour chaque morceau et les insérer dans TopGenres
-    genre_counter = Counter()
-    for track in tracks:
-        genres = get_track_genres(track, token)
-        # DONE : Insérer les genres dans la DB si besoin
-        track["genres"] = genres
-        for genre in genres:
-            genre_counter[genre] += 1
-
-    for rank, (genre, score) in enumerate(genre_counter.most_common(), start=1):
-        cursor.execute(
-            """
-            INSERT INTO TOP_GENRES (USER_ID, GENRE_NAME, SCORE, RANKING, PERIOD)
-            VALUES (%s, %s, %s, %s, %s)
-            """,
-            (user_id, genre, score, rank, "short_term")
-        )
-
-    db.commit()
-
-    resp = make_response(jsonify(tracks))
-    resp.headers["Access-Control-Allow-Origin"] = "*"
-
-    return resp
 
 
 @app.route("/top-artists")
@@ -294,31 +219,18 @@ def top_artists():
         resp.headers["Access-Control-Allow-Origin"] = "*"
         return resp, 400
 
-    headers = {"Authorization": f"Bearer {token}"}
-
-    response = requests.get(
-        f"{SPOTIFY_API_BASE_URL}/v1/me/top/artists?limit=50&time_range=short_term",
-        headers=headers,
-    )
-
-    print(f"Spotify API response status: {response.status_code}")
-    print(f"Spotify API response: {response.text}")
-
-    if response.status_code != 200:
+    try:
+        data = spotifyapi.get_top_artists(token)
+        resp = make_response(jsonify(data))
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp
+    except SpotifyException as e:
         resp = make_response(
-            jsonify({"error": "Failed to fetch top tracks"})
+            jsonify({"error": str(e)})
         )
         resp.headers["Access-Control-Allow-Origin"] = "*"
-        return resp, response.status_code
+        return resp, e.status_code
 
-    data = response.json()
-
-    print(data)
-
-    resp = make_response(jsonify(data["items"]))
-    resp.headers["Access-Control-Allow-Origin"] = "*"
-
-    return resp
 
 
 @app.route("/track-details")
