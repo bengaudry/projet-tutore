@@ -8,7 +8,6 @@ const { profile } = useProfile()
 const { signOut } = useSession()
 </script>
 
-
 <template>
   <header class="mt-8 flex flex-row items-center justify-between">
     <div class="flex flex-row items-center gap-6">
