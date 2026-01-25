@@ -50,3 +50,42 @@ Contient toutes les vues de l'application.
 ## Bases de données
 
 
+Le backend utilise une base de données MySQL pour stocker les informations des utilisateurs et leurs préférences Spotify. La connexion à la base est gérée via la fonction get_db(), qui retourne un objet db permettant d’exécuter les requêtes SQL.
+
+Tables principales
+
+USERS
+
+Cette table stocke les informations de chaque utilisateur connecté via Spotify OAuth.
+
+| Colonne       | Type     | Description                                                |
+| ------------- | -------- | ---------------------------------------------------------- |
+| ID_USERS      | INT (PK) | Identifiant unique de l’utilisateur                        |
+| USERNAME      | VARCHAR  | Nom affiché de l’utilisateur                               |
+| EMAIL         | VARCHAR  | Email de l’utilisateur (unique)                            |
+| PASSWORD_HASH | VARCHAR  | Mot de passe ou valeur spéciale "spotify_oauth" pour OAuth |
+| CREATED_AT    | DATETIME | Date de création de l’utilisateur                          |
+
+TOP_MUSICS
+
+Cette table contient les musiques préférées de l’utilisateur, classées selon l’ordre renvoyé
+| Colonne     | Type     | Description                                                  |
+| ----------- | -------- | ------------------------------------------------------------ |
+| USER_ID     | INT (FK) | Référence à `USERS.ID_USERS`                                 |
+| TRACK_NAME  | VARCHAR  | Nom de la musique                                            |
+| ARTIST_NAME | VARCHAR  | Nom de l’artiste                                             |
+| RANKING     | INT      | Rang dans le top (1 = top 1)                                 |
+| PERIOD      | VARCHAR  | Période d’analyse (`short_term`, `medium_term`, `long_term`) |
+
+TOP_ARTISTS
+
+Cette table contient les artistes préférés de l’utilisateur.
+| Colonne     | Type     | Description                                                  |
+| ----------- | -------- | ------------------------------------------------------------ |
+| USER_ID     | INT (FK) | Référence à `USERS.ID_USERS`                                 |
+| ARTIST_NAME | VARCHAR  | Nom de l’artiste                                             |
+| RANKING     | INT      | Rang dans le top                                             |
+| PERIOD      | VARCHAR  | Période d’analyse (`short_term`, `medium_term`, `long_term`) |
+
+
+
