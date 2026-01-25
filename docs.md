@@ -71,7 +71,7 @@ permet de calculer la compatibilité entre les musiques.
 
 ## Bases de données
 
-Le code lié à la bd est contenu dans le fichier db_projet-tutore.sql dans le dossier database/
+Le code lié à la bd est contenu dans le fichier `db_projet-tutore.sql` dans le dossier `database/`
 Le backend s’appuie sur une base de données **MySQL** afin de stocker les informations des utilisateurs ainsi que leurs préférences musicales issues de l’API Spotify.
 
 La connexion à la base de données est centralisée via la fonction `get_db()`, qui retourne un objet de connexion MySQL permettant d’exécuter les requêtes SQL depuis le backend Flask.
