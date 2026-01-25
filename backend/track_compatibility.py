@@ -2,15 +2,17 @@ import database
 import spotifyapi
 
 
-def compute_track_compatibility(token, user_id, track, top_artists=None, top_genres=None):
+def compute_track_compatibility(token, user_id, track, top_tracks=None, top_artists=None, top_genres=None):
     """Calcule la compatibilité d'une musique avec le profil de l'utilisateur."""
-    # TODO : Implémenter une vraie logique de compatibilité
 
     print("Calcul de la compatibilité pour la musique", track.get('name'), "de", track.get('artists')[0]['name'])
-    top_tracks = database.get_user_top_tracks(user_id)
-    if any(t['spotify_id'] == track['id'] for t in top_tracks):
-        return 1.0 # Compatibilité maximale si la musique est déjà dans les tops
 
+    if top_tracks is None:
+        top_tracks = database.get_user_top_tracks(user_id)
+    if any(t['spotify_id'] == track['id'] for t in top_tracks):
+        return 1.0 # Compatibilité à 1 si la musique est déjà dans les tops
+
+    # Récupérer les artistes et genres préférés de l'utilisateur si non fournis
     if top_artists is None:
         top_artists = database.get_user_top_artists(user_id)
     if top_genres is None:
@@ -19,37 +21,29 @@ def compute_track_compatibility(token, user_id, track, top_artists=None, top_gen
     track_artists = track.get('artists', [])
     track_genres = spotifyapi.get_track_genres(track, token)
 
+    # Calcul des intersections entre genres et artistes de la musique et ceux des tops de l'utilisateur
     track_artists_in_top_artists = get_track_artists_in_top_artists(top_artists, track_artists)
     track_genres_in_top_genres = get_genres_in_top_genres(track_genres, top_genres)
 
+    # Récupérer la popularité moyenne des musiques de l'utilisateur
     avg_popularity = database.get_user_avg_popularity(user_id)
 
     sum_of_genres_scores_in_top_genres = get_items_scores_sum(track_genres_in_top_genres)
 
-    c1 = len(track_artists_in_top_artists) / max(len(track_artists), 1)
-    print("c1 = ", c1)
-    
+    # Calcul des coefficients de compatibilité
+    c1 = len(track_artists_in_top_artists) / max(len(track_artists), 1)    
     c2 = max(0,
         get_items_scores_sum(track_artists_in_top_artists) / max(get_items_scores_sum(top_artists), 1)
     )
-    print("c2 = ", c2)
-    
     c3 = 1 - abs(track.get("popularity", 0)/100 - avg_popularity/100)
-    print("c3 = ", c3)
 
-    if len(track_genres) == 0:
+    if len(track_genres) == 0: # Pas de genres pour la musique, on ne prend pas en compte c4 et c5
         return (round(0.4*c1+0.4*c2+0.2*c3, 2), c1, c2, c3, 0, 0)
 
-    print("Track genres:", track_genres)
-    print("Track genres in top genres:", track_genres_in_top_genres)
-
     c4 = len(track_genres_in_top_genres) / max(len(track_genres), 1)
-    print("c4 = ", c4)
-
     c5 = 0
     if sum_of_genres_scores_in_top_genres != 0:
         c5 = get_track_genres_score(track_genres, top_genres) / sum_of_genres_scores_in_top_genres
-    print("c5 = ", c5)
 
     return (round(0.3*c1+0.3*c2+0.1*c3+0.1*c4+0.2*c5, 2), c1, c2, c3, c4, c5)
 

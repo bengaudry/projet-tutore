@@ -32,7 +32,6 @@ watch(
 const series = computed(() => {
   if (!trackDetails.value?.compatibility_score) return []
   const c = trackDetails.value.compatibility_details
-  console.log(c)
   return [
     {
       name: "Compatibilité",
@@ -92,7 +91,7 @@ const chartHeight = computed(() => window.innerHeight / 1.5)
         <Card class="border-border">
           <CardHeader>
             <CardTitle
-              >{{ trackDetails.compatibility_score * 100 }}% compatible avec votre profil
+              >{{ Math.round(trackDetails.compatibility_score * 100) }}% compatible avec votre profil
               musical</CardTitle
             >
           </CardHeader>

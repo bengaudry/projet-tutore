@@ -91,9 +91,6 @@ def get_top_artists(token):
         headers=headers,
     )
 
-    print(f"Spotify API response status: {response.status_code}")
-    print(f"Spotify API response: {response.text}")
-
     if response.status_code != 200:
         raise SpotifyException(
             message=response.json().get('error', {}).get('message', 'Unknown error'), 
@@ -112,8 +109,6 @@ def get_top_tracks(token):
         f"{SPOTIFY_API_BASE_URL}/v1/me/top/tracks?limit=50&time_range=short_term",
         headers=headers,
     )
-
-    print(f"Spotify API response status: {response.status_code}")
 
     if response.status_code != 200:
         raise SpotifyException(
@@ -147,7 +142,6 @@ def get_track_details(token, user_id, track_id):
     data["compatibility_details"]["c3"] = track_compatibility[3]
     data["compatibility_details"]["c4"] = track_compatibility[4]
     data["compatibility_details"]["c5"] = track_compatibility[5]
-    print(data["compatibility_details"])
     return data
 
 
@@ -172,9 +166,12 @@ def get_track_research_results(token, user_id, query):
 
     top_artists = database.get_user_top_artists(user_id)
     top_genres = database.get_user_top_genres(user_id)
+    top_tracks = database.get_user_top_tracks(user_id)
 
     for track in tracks:
-        track["compatibility_score"] = compute_track_compatibility(token, user_id, track, top_artists, top_genres)[0]
+        track["compatibility_score"] = compute_track_compatibility(
+            token, user_id, track, top_tracks,top_artists, top_genres
+        )[0]
         track["genres"] = get_track_genres(track, token)
 
     return tracks
