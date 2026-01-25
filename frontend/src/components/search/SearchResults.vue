@@ -11,9 +11,9 @@ const { results } = useTrackResearch()
   <ul v-if="results && results.length > 0" class="overflow-y-scroll">
     <li v-for="(result, index) in results" :key="index">
       <DialogClose class="w-full">
-        <a
+        <router-link
           class="flex flex-row items-center gap-4 justify-between hover:bg-neutral-800 p-3 rounded-lg"
-          :href="`/music-compatibility/${result.id}`"
+          :to="`/music-compatibility/${result.id}`"
         >
           <div class="flex flex-row items-center gap-4">
             <img :src="result.album.images[0]?.url" alt="Album Art" class="w-12 h-12 rounded-md" />
@@ -35,7 +35,7 @@ const { results } = useTrackResearch()
             "
             >{{ result.compatibility_score }}</Badge
           >
-        </a>
+        </router-link>
       </DialogClose>
       <Separator v-if="index !== results.length - 1" />
     </li>
