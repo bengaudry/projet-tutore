@@ -2,6 +2,7 @@ from flask import Flask, redirect, session, make_response, jsonify, request
 from dotenv import load_dotenv
 from random import randint
 from track_compatibility import compute_track_compatibility
+from database import clear_user_data
 
 import requests
 import os
@@ -17,7 +18,10 @@ app.secret_key = os.urandom(24)
 BACKEND_DOMAIN = "127.0.0.1"
 BACKEND_PORT = 5000
 BACKEND_URL = f"http://{BACKEND_DOMAIN}:{BACKEND_PORT}"
+
 FRONTEND_URL = "http://127.0.0.1:5173"
+
+SPOTIFY_API_BASE_URL = "https://api.spotify.com"
 
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
@@ -92,7 +96,6 @@ def redirect_spotify():
         resp.headers["Access-Control-Allow-Origin"] = "*"
         return resp, 400
 
-    
     # preparation de la connexion et les header pour interagir avec spotify
     db = get_db()
     cursor = db.cursor(dictionary=True)
@@ -100,13 +103,14 @@ def redirect_spotify():
     headers = {"Authorization": f"Bearer {access_token}"}
 
     # DONE : Récupérer les infos utilisateur et les stocker dans la DB
-    me = requests.get("https://api.spotify.com/v1/me", headers=headers).json()
+    me = requests.get(f"{SPOTIFY_API_BASE_URL}/v1/me", headers=headers).json()
     email = me.get("email")
     username = me.get("display_name")
 
     cursor.execute("SELECT ID_USERS FROM USERS WHERE EMAIL = %s", (email,))
     user = cursor.fetchone()
 
+    # Ajout de l'utilisateur dans la DB s'il n'existe pas déjà
     if user:
         user_id = user["ID_USERS"]
     else:
@@ -117,9 +121,11 @@ def redirect_spotify():
         db.commit()
         user_id = cursor.lastrowid
 
+    # Supprime les anciennes données utilisateur dans la DB
+    clear_user_data(cursor, user_id)
+
     # DONE : Récupérer les tops musiques, en déduire les tops genres et les stocker dans la DB
-    tracks = requests.get(
-        "https://api.spotify.com/v1/me/top/tracks?limit=50&time_range=short_term",
+    tracks = requests.get(f"{SPOTIFY_API_BASE_URL}/v1/me/top/tracks?limit=50&time_range=short_term",
         headers=headers
     ).json().get("items", [])
 
@@ -136,7 +142,7 @@ def redirect_spotify():
 
     # DONE : Récupérer les tops artistes et les stocker dans la DB
     artists = requests.get(
-        "https://api.spotify.com/v1/me/top/artists?limit=50&time_range=short_term",
+        f"{SPOTIFY_API_BASE_URL}/v1/me/top/artists?limit=50&time_range=short_term",
         headers=headers
     ).json().get("items", [])
 
@@ -176,7 +182,7 @@ def profile():
     headers = {"Authorization": f"Bearer {token}"}
 
 
-    response = requests.get("https://api.spotify.com/v1/me", headers=headers)
+    response = requests.get(f"{SPOTIFY_API_BASE_URL}/v1/me", headers=headers)
 
     print(f"Spotify API response status: {response.status_code}")
     print(f"Spotify API response: {response.text}")
@@ -214,7 +220,7 @@ def top_tracks():
 
 
     response = requests.get(
-        "https://api.spotify.com/v1/me/top/tracks?limit=50&time_range=short_term",
+        f"{SPOTIFY_API_BASE_URL}/v1/me/top/tracks?limit=50&time_range=short_term",
         headers=headers,
     )
 
@@ -291,7 +297,7 @@ def top_artists():
     headers = {"Authorization": f"Bearer {token}"}
 
     response = requests.get(
-        "https://api.spotify.com/v1/me/top/artists?limit=50&time_range=short_term",
+        f"{SPOTIFY_API_BASE_URL}/v1/me/top/artists?limit=50&time_range=short_term",
         headers=headers,
     )
 
@@ -334,7 +340,7 @@ def track_details():
     headers = {"Authorization": f"Bearer {token}"}
 
     response = requests.get(
-        f"https://api.spotify.com/v1/tracks/{track_id}",
+        f"{SPOTIFY_API_BASE_URL}/v1/tracks/{track_id}",
         headers=headers,
     )
 
@@ -376,7 +382,7 @@ def track_research():
     headers = {"Authorization": f"Bearer {token}"}
 
     response = requests.get(
-        f"https://api.spotify.com/v1/search?q={urllib.parse.quote(query)}&type=track&limit=5",
+        f"{SPOTIFY_API_BASE_URL}/v1/search?q={urllib.parse.quote(query)}&type=track&limit=5",
         headers=headers,
     )
 
@@ -411,7 +417,7 @@ def get_track_genres(track, token):
     headers = {"Authorization": f"Bearer {token}"}
     artist_id = track["artists"][0]["id"]
     response = requests.get(
-        f"https://api.spotify.com/v1/artists/{artist_id}",
+        f"{SPOTIFY_API_BASE_URL}/v1/artists/{artist_id}",
         headers=headers,
     )
     if response.status_code != 200:
