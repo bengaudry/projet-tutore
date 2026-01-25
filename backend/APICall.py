@@ -6,6 +6,16 @@ import requests
 import os
 import base64
 import urllib.parse
+import mysql.connector
+
+def get_db():
+    return mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="",  
+        database="music_project"
+    )
+
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -74,10 +84,67 @@ def redirect_spotify():
         resp.headers["Access-Control-Allow-Origin"] = "*"
         return resp, 400
 
+    
+    # preparation de la connexion et les header pour interagir avec spotify
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
 
-    # TODO : Récupérer les infos utilisateur et les stocker dans la DB
-    # TODO : Récupérer les tops musiques, en déduire les tops genres et les stocker dans la DB
-    # TODO : Récupérer les tops artistes et les stocker dans la DB
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    # DONE : Récupérer les infos utilisateur et les stocker dans la DB
+    me = requests.get("https://api.spotify.com/v1/me", headers=headers).json()
+    email = me.get("email")
+    username = me.get("display_name")
+
+    cursor.execute("SELECT ID_USERS FROM USERS WHERE EMAIL = %s", (email,))
+    user = cursor.fetchone()
+
+    if user:
+        user_id = user["ID_USERS"]
+    else:
+        cursor.execute(
+            "INSERT INTO USERS (USERNAME, EMAIL, PASSWORD_HASH) VALUES (%s, %s, %s)",
+            (username, email, "spotify_oauth")
+        )
+        db.commit()
+        user_id = cursor.lastrowid
+
+    # DONE : Récupérer les tops musiques, en déduire les tops genres et les stocker dans la DB
+    tracks = requests.get(
+        "https://api.spotify.com/v1/me/top/tracks?limit=50&time_range=long_term",
+        headers=headers
+    ).json().get("items", [])
+
+    cursor.execute("DELETE FROM TOP_MUSICS WHERE USER_ID = %s", (user_id,))
+
+    for rank, track in enumerate(tracks, start=1):
+        cursor.execute(
+            """
+            INSERT INTO TOP_MUSICS (USER_ID, TRACK_NAME, ARTIST_NAME, RANKING, PERIOD)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (user_id, track["name"], track["artists"][0]["name"], rank, "long_term")
+        )
+
+    # DONE : Récupérer les tops artistes et les stocker dans la DB
+    artists = requests.get(
+        "https://api.spotify.com/v1/me/top/artists?limit=50&time_range=long_term",
+        headers=headers
+    ).json().get("items", [])
+
+    cursor.execute("DELETE FROM TOP_ARTISTS WHERE USER_ID = %s", (user_id,))
+
+    for rank, artist in enumerate(artists, start=1):
+        cursor.execute(
+            """
+            INSERT INTO TOP_ARTISTS (USER_ID, ARTIST_NAME, RANKING, PERIOD)
+            VALUES (%s, %s, %s, %s)
+            """,
+            (user_id, artist["name"], rank, "long_term")
+        )
+
+    db.commit()
+
 
 
     # Redirect to frontend with token
