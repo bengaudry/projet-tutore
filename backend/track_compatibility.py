@@ -9,8 +9,6 @@ def compute_track_compatibility(token, user_id, track, top_tracks=None, top_arti
 
     if top_tracks is None:
         top_tracks = database.get_user_top_tracks(user_id)
-    if any(t['spotify_id'] == track['id'] for t in top_tracks):
-        return 1.0 # Compatibilité à 1 si la musique est déjà dans les tops
 
     # Récupérer les artistes et genres préférés de l'utilisateur si non fournis
     if top_artists is None:
