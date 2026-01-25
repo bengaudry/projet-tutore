@@ -72,7 +72,9 @@ permet de calculer la compatibilité entre les musiques.
 ## Bases de données
 
 
-Le backend utilise une base de données MySQL pour stocker les informations des utilisateurs et leurs préférences Spotify. La connexion à la base est gérée via la fonction get_db(), qui retourne un objet db permettant d’exécuter les requêtes SQL.
+Le backend s’appuie sur une base de données **MySQL** afin de stocker les informations des utilisateurs ainsi que leurs préférences musicales issues de l’API Spotify.
+
+La connexion à la base de données est centralisée via la fonction `get_db()`, qui retourne un objet de connexion MySQL permettant d’exécuter les requêtes SQL depuis le backend Flask.
 
 Tables principales
 
@@ -80,34 +82,56 @@ USERS
 
 Cette table stocke les informations de chaque utilisateur connecté via Spotify OAuth.
 
-| Colonne       | Type     | Description                                                |
-| ------------- | -------- | ---------------------------------------------------------- |
-| ID_USERS      | INT (PK) | Identifiant unique de l’utilisateur                        |
-| USERNAME      | VARCHAR  | Nom affiché de l’utilisateur                               |
-| EMAIL         | VARCHAR  | Email de l’utilisateur (unique)                            |
-| PASSWORD_HASH | VARCHAR  | Mot de passe ou valeur spéciale "spotify_oauth" pour OAuth |
-| CREATED_AT    | DATETIME | Date de création de l’utilisateur                          |
+| Colonne     | Type         | Description                          |
+| ----------- | ------------ | ------------------------------------ |
+| ID          | INT (PK)     | Identifiant unique de l’utilisateur  |
+| USERNAME    | VARCHAR(100) | Nom affiché de l’utilisateur Spotify |
+| EMAIL       | VARCHAR(100) | Adresse email Spotify (unique)       |
+| PICTURE_URL | VARCHAR(500) | URL de la photo de profil Spotify    |
+| CREATED_AT  | TIMESTAMP    | Date de création de l’utilisateur    |
+
 
 TOP_MUSICS
 
 Cette table contient les musiques préférées de l’utilisateur, classées selon l’ordre renvoyé
-| Colonne     | Type     | Description                                                  |
-| ----------- | -------- | ------------------------------------------------------------ |
-| USER_ID     | INT (FK) | Référence à `USERS.ID_USERS`                                 |
-| TRACK_NAME  | VARCHAR  | Nom de la musique                                            |
-| ARTIST_NAME | VARCHAR  | Nom de l’artiste                                             |
-| RANKING     | INT      | Rang dans le top (1 = top 1)                                 |
-| PERIOD      | VARCHAR  | Période d’analyse (`short_term`, `medium_term`, `long_term`) |
+| Colonne         | Type         | Description                          |
+| --------------- | ------------ | ------------------------------------ |
+| ID              | INT (PK)     | Identifiant interne                  |
+| SPOTIFY_ID      | VARCHAR(100) | Identifiant Spotify de la musique    |
+| USER_ID         | INT (FK)     | Référence à `USERS.ID`               |
+| TRACK_NAME      | VARCHAR(255) | Nom de la musique                    |
+| ARTIST_NAME     | VARCHAR(255) | Nom de l’artiste principal           |
+| ALBUM_COVER_URL | VARCHAR(500) | Image de l’album                     |
+| RANKING         | INT          | Rang dans le top Spotify             |
+| DURATION_MS     | INT          | Durée du morceau en millisecondes    |
+| POPULARITY      | INT          | Indice de popularité Spotify (0–100) |
+
 
 TOP_ARTISTS
 
 Cette table contient les artistes préférés de l’utilisateur.
-| Colonne     | Type     | Description                                                  |
-| ----------- | -------- | ------------------------------------------------------------ |
-| USER_ID     | INT (FK) | Référence à `USERS.ID_USERS`                                 |
-| ARTIST_NAME | VARCHAR  | Nom de l’artiste                                             |
-| RANKING     | INT      | Rang dans le top                                             |
-| PERIOD      | VARCHAR  | Période d’analyse (`short_term`, `medium_term`, `long_term`) |
+| Colonne     | Type         | Description                                 |
+| ----------- | ------------ | ------------------------------------------- |
+| ID          | INT (PK)     | Identifiant interne                         |
+| SPOTIFY_ID  | VARCHAR(100) | Identifiant Spotify de l’artiste            |
+| USER_ID     | INT (FK)     | Référence à `USERS.ID`                      |
+| ARTIST_NAME | VARCHAR(255) | Nom de l’artiste                            |
+| PICTURE_URL | VARCHAR(255) | Image de l’artiste                          |
+| FOLLOWERS   | INT          | Nombre d’abonnés Spotify                    |
+| RANKING     | INT          | Rang dans le top artistes                   |
+| SCORE       | INT          | Score interne utilisé pour la compatibilité |
+
+TOP_GENRES
+
+Cette table contient les genres musicaux dominants de l’utilisateur, déduits à partir des artistes et musiques écoutés.
+
+| Colonne    | Type         | Description                                         |
+| ---------- | ------------ | --------------------------------------------------- |
+| ID         | INT (PK)     | Identifiant interne                                 |
+| USER_ID    | INT (FK)     | Référence à `USERS.ID`                              |
+| GENRE_NAME | VARCHAR(100) | Nom du genre musical                                |
+| SCORE      | INT          | Poids du genre dans le profil utilisateur           |
+| PERIOD     | VARCHAR(50)  | Période d’analyse (`short_term`, `long_term`, etc.) |
 
 
 
