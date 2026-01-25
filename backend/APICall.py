@@ -138,6 +138,28 @@ def top_artists():
         return resp, 500
 
 
+@app.route("/top-genres")
+def top_genres():
+    print("[GET] /top-genres")
+    user_id = request.args.get("user_id")
+
+    if not user_id:
+        resp = make_response(jsonify({"error": "No user_id provided"}))
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp, 400
+
+    try:
+        data = database.get_user_top_genres(user_id)
+        resp = make_response(jsonify([item['genre_name'] for item in data]))
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp
+    except Exception as e:
+        resp = make_response(
+            jsonify({"error": str(e)})
+        )
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp, 500
+
 
 @app.route("/track-details")
 def track_details():
