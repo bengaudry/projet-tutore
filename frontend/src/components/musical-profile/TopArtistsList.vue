@@ -28,8 +28,8 @@ const isOpen = ref(true)
             :key="artist.id"
             :index="index"
             :title="artist.name"
-            :subtitle="`${artist.followers.total.toLocaleString()} followers`"
-            :img-url="artist.images[0]?.url"
+            :subtitle="`${artist.followers.toLocaleString()} followers`"
+            :img-url="artist.picture_url"
             :img-alt="artist.name"
             img-radius="full"
           />

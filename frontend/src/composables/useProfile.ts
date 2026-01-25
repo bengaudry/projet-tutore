@@ -1,9 +1,9 @@
 import { readonly, ref } from "vue"
 import { useSession } from "./useSession"
-import type { SpotifyProfile } from "@/types/SpotifyProfile"
 import { API_URL } from "@/lib/constants"
+import type { Profile } from "@/types/DbTypes"
 
-const profile = ref<SpotifyProfile | null>(null)
+const profile = ref<Profile | null>(null)
 
 const profileError = ref<string | null>(null)
 
@@ -13,10 +13,11 @@ const profileError = ref<string | null>(null)
 const fetchProfile = async () => {
   try {
     console.info("Fetching profile...")
-    const { sessionToken, signOut } = useSession()
+    const { sessionToken, userId, signOut } = useSession()
     if (!sessionToken.value) throw new Error("No session token set")
+    if (!userId.value) throw new Error("No user ID set")
 
-    const response = await fetch(`${API_URL}/profile?token=${sessionToken.value}`, {
+    const response = await fetch(`${API_URL}/profile?user_id=${userId.value}`, {
       method: "GET",
     })
 
