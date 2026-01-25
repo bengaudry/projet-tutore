@@ -2,7 +2,7 @@
 import { RouterLink } from "vue-router"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogTrigger } from "@/components/ui/dialog"
-import SearchModal from "./SearchModal.vue"
+import SearchModal from "./search/SearchModal.vue"
 </script>
 
 <template>
