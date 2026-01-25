@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ErrorWrapper from "@/components/ErrorWrapper.vue"
+import MusicCompatibilityHeader from "@/components/music-compatibility/MusicCompatibilityHeader.vue"
 import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useTrackDetails } from "@/composables/useTrackDetails"
@@ -33,7 +34,7 @@ const series = computed(() => {
   return [
     {
       name: "Compatibilité",
-      data: [trackDetails.value.compatibility_score*100],
+      data: [trackDetails.value.compatibility_score * 100],
     },
   ]
 })
@@ -47,9 +48,7 @@ const chartOptions: VueApexChartsComponentProps["options"] = {
     dropShadow: { enabled: true, blur: 5, opacity: 0.1 },
   },
   xaxis: {
-    categories: [
-      "Compatibilité",
-    ],
+    categories: ["Compatibilité"],
   },
   yaxis: {
     min: 0,
@@ -69,52 +68,12 @@ const chartOptions: VueApexChartsComponentProps["options"] = {
 }
 
 const chartHeight = computed(() => window.innerHeight / 1.5)
-
-const formatDuration = (ms: number) => {
-  const totalSeconds = Math.floor(ms / 1000)
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`
-}
 </script>
 
 <template>
   <main class="p-6 max-w-screen-lg mx-auto">
     <div v-if="trackDetails" class="mb-6">
-      <header class="flex flex-col sm:flex-row sm:items-end gap-6">
-        <div class="relative">
-          <img
-            :src="trackDetails.album.images[0]?.url"
-            alt="Album cover"
-            class="w-58 h-58 mr-4 absolute -z-10 inset-0 blur-xl opacity-60"
-          />
-          <img
-            :src="trackDetails.album.images[0]?.url"
-            alt="Album cover"
-            class="w-52 h-52 mr-4 z-20 rounded-md"
-          />
-        </div>
-        <div>
-          <a
-            :href="trackDetails.external_urls.spotify"
-            target="_blank"
-            class="underline underline-offset-4"
-          >
-            <h1 v-if="trackDetails" class="mb-2">{{ trackDetails.name }}</h1>
-          </a>
-          <h2 v-if="trackDetails">
-            {{ trackDetails.artists.map((artist) => artist.name).join(", ") }}
-          </h2>
-          <p class="text-neutral-400 mb-4">
-            {{ trackDetails.album.name }}
-            &bull;
-            {{ new Date(trackDetails.album.release_date).getFullYear() }}
-            &bull;
-            {{ formatDuration(trackDetails.duration_ms) }}
-          </p>
-        </div>
-      </header>
-
+      <MusicCompatibilityHeader />
       <audio v-if="trackDetails?.preview_url" :src="trackDetails.preview_url" controls></audio>
 
       <div class="apexcharts-theme-dark mt-6">
