@@ -4,7 +4,7 @@ import { computed, readonly, ref } from "vue"
 const sessionToken = ref<string | null>(null)
 
 /**
- * Modifie la valeur du token de session.
+ * Modifie le token de session.
  * @param token Le nouveau token de session, ou null pour le supprimer.
  */
 const setSessionToken = (token: string | null) => {
@@ -17,10 +17,10 @@ const setSessionToken = (token: string | null) => {
 }
 
 /**
- * Initialise le token à partir des paramètres de l'URL
+ * Initialise la session en récupérant le token depuis l'URL ou le localStorage.
  */
 const initSession = () => {
-  // Vérifie l'URL pour access_token (depuis le callback OAuth)
+  // Vérification que l'URL contient un token
   const urlParams = new URLSearchParams(window.location.search)
   const tokenFromUrl = urlParams.get("access_token")
 
@@ -29,6 +29,12 @@ const initSession = () => {
     // Nettoie l'historique pour enlever le token de l'URL
     window.history.replaceState({}, document.title, window.location.pathname)
     return
+  }
+
+  // Sinon, on vérifie le localStorage
+  const storedToken = localStorage.getItem("spotify-token")
+  if (storedToken) {
+    sessionToken.value = storedToken
   }
 }
 
@@ -48,6 +54,8 @@ const handleSpotifyRedirect = async () => {
   return new Promise<void>((resolve, reject) => {
     const urlParams = new URLSearchParams(window.location.search)
     const accessToken = urlParams.get("token")
+
+    console.info("Handling Spotify redirect with token:", accessToken)
 
     if (accessToken) {
       setSessionToken(accessToken)

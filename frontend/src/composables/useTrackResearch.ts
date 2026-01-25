@@ -1,7 +1,8 @@
 import { BackendApi } from "@/functions/api/backend"
+import type { TrackResearchItem } from "@/types/SpotifyTrackResearch"
 import { computed, readonly, ref } from "vue"
 
-const results = ref<any[] | undefined>([])
+const results = ref<TrackResearchItem[] | undefined>([])
 const isLoading = computed(() => results.value === undefined)
 const error = ref<string | null>(null)
 

@@ -1,5 +1,6 @@
 import { useSession } from "@/composables/useSession";
 import { API_URL } from "@/lib/constants";
+import type { TrackResearchItem } from "@/types/SpotifyTrackResearch";
 import type { ArtistObject, TrackObject } from "@/types/TopItems";
 import type { SpotifyTrackDetails } from "@/types/TrackDetails";
 
@@ -51,7 +52,7 @@ export class BackendApi {
    * @param query le contenu de la recherche
    * @returns les musiques au format JSON renvoyées par l'API spotify
    */
-  public static async researchTracks(query: string) {
+  public static async researchTracks(query: string): Promise<Array<TrackResearchItem>> {
     return this.fetchApi(
       `/track-research`,
       { params: { q: query, token: this.getToken() } }
