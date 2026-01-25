@@ -1,12 +1,28 @@
 from flask import Flask, redirect, session, make_response, jsonify, request
 from dotenv import load_dotenv
 from random import randint
+from track_compatibility import compute_track_compatibility
 
 import requests
 import os
 import base64
 import urllib.parse
 import mysql.connector
+
+
+app = Flask(__name__)
+app.secret_key = os.urandom(24)
+
+BACKEND_DOMAIN = "127.0.0.1"
+BACKEND_PORT = 5000
+BACKEND_URL = f"http://{BACKEND_DOMAIN}:{BACKEND_PORT}"
+FRONTEND_URL = "http://127.0.0.1:5173"
+
+CLIENT_ID = os.getenv("CLIENT_ID")
+CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+REDIRECT_URI = f"{BACKEND_URL}/redirect-spotify"
+SCOPE = "user-read-private user-read-email user-top-read"
+
 
 def get_db():
     return mysql.connector.connect(
@@ -15,15 +31,6 @@ def get_db():
         password="",  
         database="music_project"
     )
-
-
-app = Flask(__name__)
-app.secret_key = os.urandom(24)
-
-CLIENT_ID = os.getenv("CLIENT_ID")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-REDIRECT_URI = "http://127.0.0.1:5000/redirect-spotify"
-SCOPE = "user-read-private user-read-email user-top-read"
 
 
 @app.route("/begin-signin")
@@ -151,7 +158,7 @@ def redirect_spotify():
     resp = make_response(jsonify(token_info))
     resp.headers["Access-Control-Allow-Origin"] = "*"
 
-    return redirect(f"http://127.0.0.1:5173/redirect-spotify?token={access_token}")
+    return redirect(f"{FRONTEND_URL}/redirect-spotify?token={access_token}")
 
 
 @app.route("/profile")
@@ -299,7 +306,7 @@ def track_details():
 
     data = response.json()
 
-    data["compatibility_score"] = randint(0, 100) / 100 # TODO : calculer la vraie compatibilité
+    data["compatibility_score"] = compute_track_compatibility(data)
 
     resp = make_response(jsonify(data))
     resp.headers["Access-Control-Allow-Origin"] = "*"
@@ -344,7 +351,7 @@ def track_research():
     tracks = data.get("tracks", {}).get("items", [])
 
     for track in tracks:
-        track["compatibility_score"] = randint(0, 100) / 100  # TODO : calculer la vraie compatibilité
+        track["compatibility_score"] = compute_track_compatibility(track)
 
     resp = make_response(jsonify(tracks))
     resp.headers["Access-Control-Allow-Origin"] = "*"
@@ -365,5 +372,5 @@ def home():
 
 
 if __name__ == "__main__":
-    load_dotenv()
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    load_dotenv() # chargement des variables d'environnement depuis le fichier .env
+    app.run(host=BACKEND_DOMAIN, port=BACKEND_PORT, debug=True) # lancement du serveur Flask
