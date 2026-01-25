@@ -118,7 +118,7 @@ def redirect_spotify():
 
     # DONE : Récupérer les tops musiques, en déduire les tops genres et les stocker dans la DB
     tracks = requests.get(
-        "https://api.spotify.com/v1/me/top/tracks?limit=50&time_range=long_term",
+        "https://api.spotify.com/v1/me/top/tracks?limit=50&time_range=short_term",
         headers=headers
     ).json().get("items", [])
 
@@ -135,7 +135,7 @@ def redirect_spotify():
 
     # DONE : Récupérer les tops artistes et les stocker dans la DB
     artists = requests.get(
-        "https://api.spotify.com/v1/me/top/artists?limit=50&time_range=long_term",
+        "https://api.spotify.com/v1/me/top/artists?limit=50&time_range=short_term",
         headers=headers
     ).json().get("items", [])
 
@@ -213,7 +213,7 @@ def top_tracks():
 
 
     response = requests.get(
-        "https://api.spotify.com/v1/me/top/tracks?limit=50&time_range=long_term",
+        "https://api.spotify.com/v1/me/top/tracks?limit=50&time_range=short_term",
         headers=headers,
     )
 
@@ -248,7 +248,7 @@ def top_artists():
     headers = {"Authorization": f"Bearer {token}"}
 
     response = requests.get(
-        "https://api.spotify.com/v1/me/top/artists?limit=50&time_range=long_term",
+        "https://api.spotify.com/v1/me/top/artists?limit=50&time_range=short_term",
         headers=headers,
     )
 
