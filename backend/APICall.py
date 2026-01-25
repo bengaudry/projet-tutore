@@ -56,49 +56,13 @@ def redirect_spotify():
     if user:
         user_id = user["id"]
     else:
-        cursor.execute(
-            "INSERT INTO USERS (USERNAME, EMAIL, PASSWORD_HASH) VALUES (%s, %s, %s)",
-            (username, email, "spotify_oauth")
-        )
-        db.commit()
-        user_id = cursor.lastrowid
-
-    # DONE : Récupérer les tops musiques, en déduire les tops genres et les stocker dans la DB
-    tracks = requests.get(
-        "https://api.spotify.com/v1/me/top/tracks?limit=50&time_range=short_term",
-        headers=headers
-    ).json().get("items", [])
-
-    cursor.execute("DELETE FROM TOP_MUSICS WHERE USER_ID = %s", (user_id,))
-
-    for rank, track in enumerate(tracks, start=1):
-        cursor.execute(
-            """
-            INSERT INTO TOP_MUSICS (USER_ID, TRACK_NAME, ARTIST_NAME, RANKING, PERIOD)
-            VALUES (%s, %s, %s, %s, %s)
-            """,
-            (user_id, track["name"], track["artists"][0]["name"], rank, "long_term")
-        )
-
-    # DONE : Récupérer les tops artistes et les stocker dans la DB
-    artists = requests.get(
-        "https://api.spotify.com/v1/me/top/artists?limit=50&time_range=short_term",
-        headers=headers
-    ).json().get("items", [])
-
-    cursor.execute("DELETE FROM TOP_ARTISTS WHERE USER_ID = %s", (user_id,))
-
-    for rank, artist in enumerate(artists, start=1):
-        cursor.execute(
-            """
-            INSERT INTO TOP_ARTISTS (USER_ID, ARTIST_NAME, RANKING, PERIOD)
-            VALUES (%s, %s, %s, %s)
-            """,
-            (user_id, artist["name"], rank, "long_term")
-        )
-
-    db.commit()
-
+        email = me.get("email")
+        username = me.get("display_name")
+        picture_url = None
+        if me.get("images") and len(me.get("images")) > 0:
+            picture_url = me["images"][0]["url"]
+        
+        user_id = database.register_user(username, email, picture_url)
 
     # Met à jour les tops musiques et artistes de l'utilisateur dans la DB
     database.store_user_top_items_in_db(access_token, user_id)    
@@ -137,17 +101,12 @@ def top_tracks():
         resp.headers["Access-Control-Allow-Origin"] = "*"
         return resp, 400
 
-    headers = {"Authorization": f"Bearer {token}"}
-
-
-    response = requests.get(
-        "https://api.spotify.com/v1/me/top/tracks?limit=50&time_range=short_term",
-        headers=headers,
-    )
-
-    print(f"Spotify API response status: {response.status_code}")
-
-    if response.status_code != 200:
+    try:
+        tracks = database.get_user_top_tracks(user_id)
+        resp = make_response(jsonify(tracks))
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp
+    except Exception as e:
         resp = make_response(
             jsonify({"error": str(e)})
         )
@@ -166,17 +125,12 @@ def top_artists():
         resp.headers["Access-Control-Allow-Origin"] = "*"
         return resp, 400
 
-    headers = {"Authorization": f"Bearer {token}"}
-
-    response = requests.get(
-        "https://api.spotify.com/v1/me/top/artists?limit=50&time_range=short_term",
-        headers=headers,
-    )
-
-    print(f"Spotify API response status: {response.status_code}")
-    print(f"Spotify API response: {response.text}")
-
-    if response.status_code != 200:
+    try:
+        data = database.get_user_top_artists(user_id)
+        resp = make_response(jsonify(data))
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp
+    except Exception as e:
         resp = make_response(
             jsonify({"error": str(e)})
         )
