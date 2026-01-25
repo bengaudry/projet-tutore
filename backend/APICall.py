@@ -307,6 +307,51 @@ def track_details():
     return resp
 
 
+@app.route("/track-research")
+def track_research():
+    print("[GET] /track-research")
+    token = request.args.get("token")
+    query = request.args.get("q")
+    
+    if not token:
+        resp = make_response(jsonify({"error": "No token provided"}))
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp, 400
+
+    if not query:
+        resp = make_response(jsonify({"error": "No query provided"}))
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp, 400
+    
+    headers = {"Authorization": f"Bearer {token}"}
+
+    response = requests.get(
+        f"https://api.spotify.com/v1/search?q={urllib.parse.quote(query)}&type=track&limit=10",
+        headers=headers,
+    )
+
+    print(f"Spotify API response status: {response.status_code}")
+
+    if response.status_code != 200:
+        resp = make_response(
+            jsonify({"error": "Failed to fetch track research"})
+        )
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp, response.status_code
+
+    data = response.json()
+
+    tracks = data.get("tracks", {}).get("items", [])
+
+    for track in tracks:
+        track["compatibility_score"] = randint(0, 100) / 100  # TODO : calculer la vraie compatibilité
+
+    resp = make_response(jsonify(tracks))
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+
+    return resp
+
+
 # Pour les tests :
 @app.route("/")
 def home():
