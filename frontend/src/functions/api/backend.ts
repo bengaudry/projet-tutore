@@ -37,6 +37,14 @@ export class BackendApi {
   }
 
   /**
+   * Récupère les genres musicaux les plus écoutés de l'utilisateur via l'API backend.
+   * @returns une liste des genres avec leur nombre d'occurrences renvoyées par l'API spotify
+   */
+  public static async getUserTopGenres(): Promise<Array<string>> {
+    return this.fetchApi(`/top-genres`, { params: { token: this.getToken(), user_id: this.getUserId() } })
+  }
+
+  /**
    * Recherche des musiques via l'API backend.
    * @param query le contenu de la recherche
    * @returns les musiques au format JSON renvoyées par l'API spotify

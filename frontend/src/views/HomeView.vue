@@ -23,7 +23,11 @@ async function handleSignIn() {
 <template>
   <main>
     <div class="flex flex-col items-center gap-8">
-      <img src="/logo.png" alt="Logo" class="w-32 h-32" />
+      <div class="flex items-center flex-col">
+        <img src="/logo.png" alt="Logo" class="w-32 h-32 mb-4" />
+        <h3 class="text-2xl font-semibold">Bienvenue sur Spotwrap</h3>
+        <p class="block max-w-xs text-center text-neutral-400">Connectez vous avec Spotify pour découvrir de nouvelles musiques qui vous plairont.</p>
+      </div>
 
       <div v-if="signInError !== null" class="bg-red-500:20 rounded-md border-red-500 border">
         {{ signInError }}
