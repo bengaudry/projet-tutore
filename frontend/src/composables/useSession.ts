@@ -1,10 +1,11 @@
+import { API_URL, APP_URL } from "@/lib/constants"
 import { computed, readonly, ref } from "vue"
 
 const sessionToken = ref<string | null>(null)
 
 /**
- * Modify the session token
- * @param token
+ * Modifie la valeur du token de session.
+ * @param token Le nouveau token de session, ou null pour le supprimer.
  */
 const setSessionToken = (token: string | null) => {
   sessionToken.value = token
@@ -16,35 +17,29 @@ const setSessionToken = (token: string | null) => {
 }
 
 /**
- * Initialize token from URL params or localStorage
+ * Initialise le token à partir des paramètres de l'URL
  */
 const initSession = () => {
-  // Check URL for access_token (from OAuth callback)
+  // Vérifie l'URL pour access_token (depuis le callback OAuth)
   const urlParams = new URLSearchParams(window.location.search)
   const tokenFromUrl = urlParams.get("access_token")
 
   if (tokenFromUrl) {
     setSessionToken(tokenFromUrl)
-    // Clean URL
+    // Nettoie l'historique pour enlever le token de l'URL
     window.history.replaceState({}, document.title, window.location.pathname)
     return
-  }
-
-  // Fall back to localStorage
-  const storedToken = localStorage.getItem("spotify-token")
-  if (storedToken) {
-    sessionToken.value = storedToken
   }
 }
 
 const signIn = () => {
-  // Redirect to backend which will redirect to Spotify
-  window.location.href = "http://localhost:5000/begin-signin"
+  // Redirige vers le backend qui redirigera vers Spotify
+  window.location.href = API_URL + "/begin-signin"
 }
 
 const signOut = () => {
   setSessionToken(null)
-  window.location.href = "http://localhost:5173/" // Redirect to home page
+  window.location.href = APP_URL // Redirige vers la page d'accueil
 }
 
 const isSignedIn = computed(() => sessionToken.value !== null)
@@ -53,8 +48,6 @@ const handleSpotifyRedirect = async () => {
   return new Promise<void>((resolve, reject) => {
     const urlParams = new URLSearchParams(window.location.search)
     const accessToken = urlParams.get("token")
-
-    console.info("Handling Spotify redirect with token:", accessToken)
 
     if (accessToken) {
       setSessionToken(accessToken)

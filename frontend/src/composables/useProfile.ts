@@ -1,18 +1,22 @@
 import { readonly, ref } from "vue";
 import { useSession } from "./useSession";
 import type { SpotifyProfile } from "@/types/SpotifyProfile";
+import { API_URL } from "@/lib/constants";
 
 const profile = ref<SpotifyProfile | null>(null)
 
 const profileError = ref<string | null>(null)
 
+/**
+ * Récupère le profil Spotify de l'utilisateur connecté via l'API backend.
+ */
 const fetchProfile = async () => {
   try {
     console.info("Fetching profile...")
     const { sessionToken, signOut } = useSession()
     if (!sessionToken.value) throw new Error("No session token set")
 
-    const response = await fetch(`http://localhost:5000/profile?token=${sessionToken.value}`, {
+    const response = await fetch(`${API_URL}/profile?token=${sessionToken.value}`, {
       method: "GET",
     })
     
