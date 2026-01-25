@@ -1,8 +1,8 @@
 import { readonly, ref } from "vue"
-import type { SpotifyTrackDetails } from "@/types/TrackDetails"
 import { BackendApi } from "@/functions/api/backend"
+import type { TrackDetails } from "@/types/DbTypes"
 
-const trackDetails = ref<SpotifyTrackDetails | undefined | null>(null)
+const trackDetails = ref<TrackDetails | undefined | null>(null)
 
 const fetchTrackDetails = async (trackId: string) => {
   try {

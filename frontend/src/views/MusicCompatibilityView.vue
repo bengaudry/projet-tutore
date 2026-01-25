@@ -31,10 +31,17 @@ watch(
 // ApexCharts series data for radar chart
 const series = computed(() => {
   if (!trackDetails.value?.compatibility_score) return []
+  const c = trackDetails.value.compatibility_details
+  console.log(c)
   return [
     {
       name: "Compatibilité",
-      data: [trackDetails.value.compatibility_score * 100],
+      data: [
+        trackDetails.value.compatibility_score * 100,
+        ((c?.c1 ?? 0)+(c?.c2 ?? 0))/2 * 100,
+        (c?.c3 ?? 0) * 100,
+        ((c?.c4 ?? 0)+(c?.c5 ?? 0))/2 * 100,
+      ],
     },
   ]
 })
@@ -48,7 +55,12 @@ const chartOptions: VueApexChartsComponentProps["options"] = {
     dropShadow: { enabled: true, blur: 5, opacity: 0.1 },
   },
   xaxis: {
-    categories: ["Compatibilité"],
+    categories: [
+      "Compatibilité", 
+      "Compatibilité avec vos top artistes",
+      "Compatibilité avec vos top genres",
+      "Compatibilité avec vos top morceaux",
+    ],
   },
   yaxis: {
     min: 0,
