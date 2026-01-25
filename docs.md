@@ -45,13 +45,13 @@ Contient toutes les vues de l'application.
 
 ## Backend
 
-Tout le code liée au backend est contenu dans le dossier `backend/`
+Tout le code lié au backend est contenu dans le dossier `backend/`
 Pour cela, nous avons utilisé le langage de programmation python en utilisant l'extension FLASK.
 On retrouvera ainsi à la racine de ce dossier tous les fichiers contenant le code permettant de communiquer avec l'API de spotify.
 
-'APICall.py' permet premierement de connecter l'utilisateur en le redirigeant vers la page d'autentification utlisateur de spotify,
-De plus, elle complete les données récuperé par celles déjà contenue dans la DB.
-elle contient aussi les fonctions permettant d'afficher le profil de 'utilisateur, les top musiques, les top artistes, le détail des musiques et ainsi de permettre de faire des recherche de musiques via spotify.
+'APICall.py' permet premièrement de connecter l'utilisateur en le redirigeant vers la page d'authentification utilisateur de spotify,
+De plus, elle complète les données récupérées par celles déjà contenue dans la DB.
+elle contient aussi les fonctions permettant d'afficher le profil de 'utilisateur, les top musiques, les top artistes, le détail des musiques et ainsi de permettre de faire des recherches de musiques via spotify.
 
 'track_compatibility.py' permet de calculer la compatibilité d'une musique avec le profil de l'utilisateur actuel.
 
