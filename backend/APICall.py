@@ -8,6 +8,7 @@ import os
 import base64
 import urllib.parse
 import mysql.connector
+from collections import Counter
 
 
 app = Flask(__name__)
@@ -229,11 +230,46 @@ def top_tracks():
     data = response.json()
     tracks = data.get("items", [])
 
+    # Récupérer l'utilisateur dans la DB via le token
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+
+    response_me = requests.get("https://api.spotify.com/v1/me", headers=headers)
+    if response_me.status_code != 200:
+        resp = make_response(jsonify({"error": "Failed to fetch profile"}))
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp, response_me.status_code
+
+    email = response_me.json().get("email")
+    cursor.execute("SELECT ID_USERS FROM USERS WHERE EMAIL = %s", (email,))
+    user = cursor.fetchone()
+    if not user:
+        resp = make_response(jsonify({"error": "User not found"}))
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp, 404
+
+    user_id = user["ID_USERS"]
+    cursor.execute("DELETE FROM TOP_GENRES WHERE USER_ID = %s", (user_id,))
+
     # Récupérer les genres pour chaque morceau et les insérer dans TopGenres
+    genre_counter = Counter()
     for track in tracks:
         genres = get_track_genres(track, token)
-        # TODO : Insérer les genres dans la DB si besoin
+        # DONE : Insérer les genres dans la DB si besoin
         track["genres"] = genres
+        for genre in genres:
+            genre_counter[genre] += 1
+
+    for rank, (genre, score) in enumerate(genre_counter.most_common(), start=1):
+        cursor.execute(
+            """
+            INSERT INTO TOP_GENRES (USER_ID, GENRE_NAME, SCORE, RANKING, PERIOD)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (user_id, genre, score, rank, "short_term")
+        )
+
+    db.commit()
 
     resp = make_response(jsonify(tracks))
     resp.headers["Access-Control-Allow-Origin"] = "*"
