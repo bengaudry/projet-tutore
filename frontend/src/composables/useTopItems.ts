@@ -1,9 +1,10 @@
 import { ref, readonly } from "vue"
 import type { TrackObject, ArtistObject } from "@/types/TopItems"
 import { BackendApi } from "@/functions/api/backend"
+import type { TopArtist, TopTrack } from "@/types/DbTypes"
 
-const topTracks = ref<Array<TrackObject> | null | undefined>(null)
-const topArtists = ref<Array<ArtistObject> | null | undefined>(null)
+const topTracks = ref<Array<TopTrack> | null | undefined>(null)
+const topArtists = ref<Array<TopArtist> | null | undefined>(null)
 
 const fetchTopTracks = async () => {
   try {

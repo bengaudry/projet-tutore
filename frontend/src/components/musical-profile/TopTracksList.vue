@@ -28,11 +28,11 @@ const isOpen = ref(true)
             :key="track.id"
             :index="index"
             :title="track.name"
-            :subtitle="track.artists.map((artist) => artist.name).join(', ')"
-            :img-url="track.album.images[0]?.url"
+            :subtitle="track.artist_name"
+            :img-url="track.album_cover_url"
             :img-alt="track.name"
             img-radius="md"
-            :links-to="`/music-compatibility/${track.id}`"
+            :links-to="`/music-compatibility/${track.spotify_id}`"
           />
         </ul>
 
