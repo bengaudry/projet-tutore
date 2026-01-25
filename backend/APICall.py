@@ -227,8 +227,15 @@ def top_tracks():
         return resp, response.status_code
 
     data = response.json()
+    tracks = data.get("items", [])
 
-    resp = make_response(data["items"])
+    # Récupérer les genres pour chaque morceau et les insérer dans TopGenres
+    for track in tracks:
+        genres = get_track_genres(track, token)
+        # TODO : Insérer les genres dans la DB si besoin
+        track["genres"] = genres
+
+    resp = make_response(jsonify(tracks))
     resp.headers["Access-Control-Allow-Origin"] = "*"
 
     return resp
@@ -357,6 +364,26 @@ def track_research():
     resp.headers["Access-Control-Allow-Origin"] = "*"
 
     return resp
+
+
+def get_track_genres(track, token):
+    """
+    Récupère les genres associés à un morceau donné 
+    (les genres associés à l'artiste principal) en utilisant l'API Spotify.
+    """
+
+    headers = {"Authorization": f"Bearer {token}"}
+    artist_id = track["artists"][0]["id"]
+    response = requests.get(
+        f"https://api.spotify.com/v1/artists/{artist_id}",
+        headers=headers,
+    )
+    if response.status_code != 200:
+        return []
+    
+    artist_data = response.json()
+    return artist_data.get("genres", [])
+
 
 
 # Pour les tests :
