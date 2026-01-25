@@ -13,6 +13,18 @@ class SpotifyException(Exception):
         self.status_code = status_code
 
 
+def get_user_profile(token):
+    """Récupère le profil de l'utilisateur Spotify."""
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.get(f"{SPOTIFY_API_BASE_URL}/v1/me", headers=headers)
+    if response.status_code != 200:
+        raise SpotifyException(
+            message=response.json().get('error', {}).get('message', 'Unknown error'), 
+            status_code=response.status_code
+        )
+    return response.json()
+
+
 def get_top_artists(token):
     """Récupère les artistes les plus écoutés de l'utilisateur."""
     headers = {"Authorization": f"Bearer {token}"}
@@ -27,7 +39,7 @@ def get_top_artists(token):
 
     if response.status_code != 200:
         raise SpotifyException(
-            message=response.error['message'], 
+            message=response.json().get('error', {}).get('message', 'Unknown error'), 
             status_code=response.status_code
         )
 
@@ -48,7 +60,7 @@ def get_top_tracks(token):
 
     if response.status_code != 200:
         raise SpotifyException(
-            message=response.error['message'],
+            message=response.json().get('error', {}).get('message', 'Unknown error'),
             status_code=response.status_code
         )
 

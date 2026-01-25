@@ -1,8 +1,7 @@
-from flask import Flask, redirect, session, make_response, jsonify, request
+from flask import Flask, redirect, make_response, jsonify, request
 from dotenv import load_dotenv
-from random import randint
 from track_compatibility import compute_track_compatibility
-from database import clear_user_data
+from database import store_user_top_items_in_db
 
 import requests
 import os
@@ -108,10 +107,13 @@ def redirect_spotify():
     headers = {"Authorization": f"Bearer {access_token}"}
 
 
-    # DONE : Récupérer les infos utilisateur et les stocker dans la DB
+    # Récupérer les infos utilisateur et les stocker dans la DB
     me = spotifyapi.get_user_profile(access_token)
     email = me.get("email")
     username = me.get("display_name")
+    picture_url = None
+    if me.get("images") and len(me.get("images")) > 0:
+        picture_url = me["images"][0]["url"]
 
     cursor.execute("SELECT ID_USERS FROM USERS WHERE EMAIL = %s", (email,))
     user = cursor.fetchone()
@@ -121,8 +123,8 @@ def redirect_spotify():
         user_id = user["ID_USERS"]
     else:
         cursor.execute(
-            "INSERT INTO USERS (USERNAME, EMAIL, PASSWORD_HASH) VALUES (%s, %s, %s)",
-            (username, email, "spotify_oauth")
+            "INSERT INTO USERS (USERNAME, EMAIL, PASSWORD_HASH, PICTURE_URL) VALUES (%s, %s, %s, %s)",
+            (username, email, "spotify_oauth", picture_url)
         )
         db.commit()
         user_id = cursor.lastrowid

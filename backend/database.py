@@ -1,8 +1,8 @@
-# Fichier pour gérer les interactions avec la base de données
-import token
-import mysql.connector
+"""
+Fichier pour gérer les interactions avec la base de données
+"""
 
-from backend.spotifyapi import get_top_artists, get_top_tracks
+from spotifyapi import get_top_artists, get_top_tracks
 
 def clear_user_data(cursor, user_id):
 	"""Supprime les données utilisateur existantes dans la base de données."""
@@ -22,10 +22,10 @@ def store_user_top_items_in_db(cursor, token, user_id):
 	for rank, track in enumerate(tracks, start=1):
 		cursor.execute(
             """
-            INSERT INTO TOP_MUSICS (USER_ID, TRACK_NAME, ARTIST_NAME, RANKING, PERIOD)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO TOP_MUSICS (USER_ID, TRACK_NAME, ARTIST_NAME, RANKING)
+            VALUES (%s, %s, %s, %s)
             """,
-            (user_id, track["name"], track["artists"][0]["name"], rank, "long_term")
+            (user_id, track["name"], track["artists"][0]["name"], rank)
         )
 
     # Récupérer les tops artistes et les stocker dans la DB
@@ -36,15 +36,19 @@ def store_user_top_items_in_db(cursor, token, user_id):
 	for rank, artist in enumerate(artists, start=1):
 		cursor.execute(
             """
-            INSERT INTO TOP_ARTISTS (USER_ID, ARTIST_NAME, RANKING, PERIOD)
+            INSERT INTO TOP_ARTISTS (USER_ID, ARTIST_NAME, PICTURE_URL,RANKING)
             VALUES (%s, %s, %s, %s)
             """,
-            (user_id, artist["name"], rank, "long_term")
+            (user_id,
+			artist["name"],
+			artist["images"][0]["url"] if artist.get("images") and len(artist.get("images")) > 0 else None,
+			rank)
         )
 
 
 def get_user_top_artists(cursor, user_id):
-	pass
+	cursor.execute("SELECT track_name, artist_name, picture_url FROM top_musics WHERE user_id = %s ORDER BY ranking", (user_id,))
+	return cursor.fetchall()
 
 
 def get_user_top_tracks(cursor, user_id):
