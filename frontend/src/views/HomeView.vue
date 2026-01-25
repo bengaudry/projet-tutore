@@ -22,20 +22,24 @@ async function handleSignIn() {
 
 <template>
   <main>
-    <div v-if="signInError !== null" class="bg-red-500:20 rounded-md border-red-500 border">
-      {{ signInError }}
-    </div>
+    <div class="flex flex-col items-center gap-8">
+      <img src="/logo.png" alt="Logo" class="w-32 h-32" />
 
-    <Button
-      size="lg"
-      v-bind:disabled="isLoading"
-      v-on:click="handleSignIn"
-      class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
-    >
-      <Spinner class="size-6" v-if="isLoading" />
-      <img v-if="!isLoading" src="/spotify-icon.png" width="24" class="size-6 invert" />
-      Se connecter avec Spotify
-    </Button>
+      <div v-if="signInError !== null" class="bg-red-500:20 rounded-md border-red-500 border">
+        {{ signInError }}
+      </div>
+
+      <Button
+          size="lg"
+          v-bind:disabled="isLoading"
+          v-on:click="handleSignIn"
+          class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
+      >
+        <Spinner class="size-6" v-if="isLoading" />
+        <img v-if="!isLoading" src="/spotify-icon.png" width="24" class="size-6 invert" />
+        Se connecter avec Spotify
+      </Button>
+    </div>
   </main>
 </template>
 
