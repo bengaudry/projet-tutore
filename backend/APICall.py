@@ -143,6 +143,7 @@ def top_artists():
 def track_details():
     print("[GET] /track-details")
     token = request.args.get("token")
+    user_id = request.args.get("user_id")
     track_id = request.args.get("track_id")
     
     if not token:
@@ -156,7 +157,7 @@ def track_details():
         return resp, 400
     
     try:
-        data = spotifyapi.get_track_details(token, track_id)
+        data = spotifyapi.get_track_details(token, user_id, track_id)
         resp = make_response(jsonify(data))
         resp.headers["Access-Control-Allow-Origin"] = "*"
         return resp
@@ -171,6 +172,7 @@ def track_details():
 def track_research():
     print("[GET] /track-research")
     token = request.args.get("token")
+    user_id = request.args.get("user_id")
     query = request.args.get("q")
     
     if not token:
@@ -184,7 +186,7 @@ def track_research():
         return resp, 400
     
     try:
-        tracks = spotifyapi.get_track_research_results(token, query)
+        tracks = spotifyapi.get_track_research_results(token, user_id, query)
         resp = make_response(jsonify(tracks))
         resp.headers["Access-Control-Allow-Origin"] = "*"
         return resp

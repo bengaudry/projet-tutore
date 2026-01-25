@@ -3,7 +3,8 @@ import base64
 import requests
 import urllib.parse
 
-from flask import jsonify, make_response
+import database
+
 from track_compatibility import compute_track_compatibility
 from constants import BACKEND_URL
 
@@ -125,7 +126,7 @@ def get_top_tracks(token):
     return tracks
 
 
-def get_track_details(token, track_id):
+def get_track_details(token, user_id, track_id):
     """Récupère les détails d'une musique spécifique."""
 
     headers = {"Authorization": f"Bearer {token}"}
@@ -138,11 +139,19 @@ def get_track_details(token, track_id):
         )
 
     data = response.json()
-    data["compatibility_score"] = compute_track_compatibility(data)
+    track_compatibility = compute_track_compatibility(token, user_id, data)
+    data["compatibility_score"] = track_compatibility[0]
+    data["compatibility_details"] = {}
+    data["compatibility_details"]["c1"] = track_compatibility[1]
+    data["compatibility_details"]["c2"] = track_compatibility[2]
+    data["compatibility_details"]["c3"] = track_compatibility[3]
+    data["compatibility_details"]["c4"] = track_compatibility[4]
+    data["compatibility_details"]["c5"] = track_compatibility[5]
+    print(data["compatibility_details"])
     return data
 
 
-def get_track_research_results(token, query):
+def get_track_research_results(token, user_id, query):
     """Recherche des musiques basées sur une requête."""
 
     headers = {"Authorization": f"Bearer {token}"}
@@ -160,8 +169,12 @@ def get_track_research_results(token, query):
     data = response.json()
 
     tracks = data.get("tracks", {}).get("items", [])
+
+    top_artists = database.get_user_top_artists(user_id)
+    top_genres = database.get_user_top_genres(user_id)
+
     for track in tracks:
-        track["compatibility_score"] = compute_track_compatibility(track)
+        track["compatibility_score"] = compute_track_compatibility(token, user_id, track, top_artists, top_genres)[0]
         track["genres"] = get_track_genres(track, token)
 
     return tracks
@@ -174,13 +187,20 @@ def get_track_genres(track, token):
     """
 
     headers = {"Authorization": f"Bearer {token}"}
-    artist_id = track["artists"][0]["id"]
-    response = requests.get(
-        f"{SPOTIFY_API_BASE_URL}/v1/artists/{artist_id}",
-        headers=headers,
-    )
-    if response.status_code != 200:
-        return []
     
-    artist_data = response.json()
-    return artist_data.get("genres", [])
+    genres = set()
+    
+    for artist in track["artists"]:
+        artist_id = artist["id"]
+        response = requests.get(
+            f"{SPOTIFY_API_BASE_URL}/v1/artists/{artist_id}",
+            headers=headers,
+        )
+        if response.status_code != 200:
+            print("Failed to fetch artist genres:", response.text)
+            continue
+    
+        artist_data = response.json()
+        genres.update(artist_data.get("genres", []))
+
+    return list(genres)
