@@ -1,7 +1,7 @@
-import { readonly, ref } from "vue";
-import { useSession } from "./useSession";
-import type { SpotifyProfile } from "@/types/SpotifyProfile";
-import { API_URL } from "@/lib/constants";
+import { readonly, ref } from "vue"
+import { useSession } from "./useSession"
+import type { SpotifyProfile } from "@/types/SpotifyProfile"
+import { API_URL } from "@/lib/constants"
 
 const profile = ref<SpotifyProfile | null>(null)
 
@@ -19,14 +19,14 @@ const fetchProfile = async () => {
     const response = await fetch(`${API_URL}/profile?token=${sessionToken.value}`, {
       method: "GET",
     })
-    
+
     // Handle expired/invalid token - sign out and prompt re-login
     if (response.status === 401 || response.status === 403) {
       console.warn("Token expired or invalid, signing out...")
       signOut()
       throw new Error("Session expired, please sign in again")
     }
-    
+
     if (!response.ok) throw new Error("Could not get spotify profile for user")
 
     const json = await response.json()
@@ -45,6 +45,6 @@ export function useProfile() {
   return {
     profile: readonly(profile),
     fetchProfile,
-    profileError: readonly(profileError)
+    profileError: readonly(profileError),
   }
 }

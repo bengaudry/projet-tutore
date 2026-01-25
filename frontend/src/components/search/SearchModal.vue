@@ -25,9 +25,7 @@ const { query, error, results, isLoading } = useTrackResearch()
     <SearchResults v-else />
 
     <!-- Affichage d'un message lorsque aucune musique n'est trouvée -->
-    <p v-if="results && query.length !== 0 && results.length === 0">
-      Aucune musique trouvée
-    </p>
+    <p v-if="results && query.length !== 0 && results.length === 0">Aucune musique trouvée</p>
 
     <ErrorWrapper v-if="error !== null" :error-message="error" />
   </DialogContent>

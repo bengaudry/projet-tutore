@@ -7,7 +7,9 @@ import SearchModal from "./search/SearchModal.vue"
 
 <template>
   <header class="border-b border-border">
-    <div class="content flex flex-row items-center justify-between gap-6 px-4 py-2 max-w-screen-lg mx-auto">
+    <div
+      class="content flex flex-row items-center justify-between gap-6 px-4 py-2 max-w-screen-lg mx-auto"
+    >
       <nav>
         <Button variant="link">
           <RouterLink to="/profile">Profil</RouterLink>
